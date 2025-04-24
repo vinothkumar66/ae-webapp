@@ -1,0 +1,156 @@
+<div class="export-header">
+  <span>Export AE Data</span>
+
+  <dx-button 
+    text="Export"
+    icon="export"
+    stylingMode="text"
+    (onClick)="onExport()"
+    *ngIf="!showGrid">
+  </dx-button>
+
+  <dx-button 
+    text="Back to Settings"
+    icon="back"
+    stylingMode="text"
+    *ngIf="showGrid"
+    (onClick)="onBack()">
+  </dx-button>
+</div>
+
+<dx-form
+  *ngIf="!showGrid"
+  [formData]="exportFormData"
+  [colCount]="2"
+  labelLocation="top"
+  #exportForm>
+  <dxi-item 
+    dataField="fileName" 
+    editorType="dxTextBox"
+    label="Export File Name">
+    <dxi-validation-rule type="required" message="File name is required"></dxi-validation-rule>
+  </dxi-item>
+
+  <dxi-item 
+    dataField="fromDate" 
+    editorType="dxDateBox" 
+    label="From Date"
+    [editorOptions]="{ 
+      type: 'datetime',
+      displayFormat: 'dd-MMM-yyyy HH:mm:ss',
+    }">
+      <dxi-validation-rule type="required" message="From date is required"></dxi-validation-rule>
+  </dxi-item>
+
+  <dxi-item 
+    dataField="toDate" 
+    editorType="dxDateBox" 
+    label="To Date"
+    [editorOptions]="{ 
+      type: 'datetime', 
+      displayFormat: 'dd-MMM-yyyy HH:mm:ss',
+    }">
+      <dxi-validation-rule type="required" message="To date is required"></dxi-validation-rule>
+      <dxi-validation-rule 
+        type="custom" 
+        [validationCallback]="validateToDate" 
+        message="To Date must be after From Date">
+      </dxi-validation-rule>
+  </dxi-item>
+
+  <dxi-item 
+    dataField="server" 
+    editorType="dxSelectBox" 
+    label="Select Server"
+    [editorOptions]="{
+      items: servers,
+      value: servers && servers.length > 0 ? servers[0].id : null,
+      displayExpr: 'name',
+      valueExpr: 'id'
+    }">
+    <dxi-validation-rule type="required" message="Server selection is required"></dxi-validation-rule>
+  </dxi-item>
+
+  <dxi-item itemType="simple" [colSpan]="1">
+    <ng-template dxTemplate="content">
+      <span>Add Conditions</span>
+      <dx-filter-builder
+        [(value)]="filterValue"
+        [fields]="filterFields"
+        [allowHierarchicalFields]="true"
+        [groupOperations]="['and', 'or']"
+        (onEditorPreparing)="onEditorPreparing($event)">
+      </dx-filter-builder>
+    </ng-template>
+    <dxi-validation-rule
+    type="custom"
+    [validationCallback]="validateConditions"
+    message="At least one condition must be added"
+  ></dxi-validation-rule>
+  </dxi-item>
+
+  <dxi-item [colSpan]="1">
+    <ng-template dxTemplate="template" let-data="data">
+      <div class="results">
+        <b>Final Query</b>
+        <pre>{{ exportFormData.fields }}</pre>
+      </div>
+    </ng-template>
+  </dxi-item>
+
+  <dxi-item itemType="simple" [colSpan]="1">
+    <ng-template dxTemplate="content">
+      <span>Available Fields</span>
+      <dx-list [dataSource]="displayFields" keyExpr="id" height="400">
+        <dxo-item-dragging
+          group="tasks"
+          [data]="displayFields"
+          [allowReordering]="true"
+          [onDragStart]="onDragStart"
+          [onAdd]="onAdd"
+          [onRemove]="onRemove"
+          [onReorder]="onReorder">
+        </dxo-item-dragging>
+      </dx-list>
+    </ng-template>
+  </dxi-item>
+
+  <dxi-item itemType="simple" [colSpan]="1">
+    <ng-template dxTemplate="content">
+      <span>Selected Fields</span>
+      <dx-list [dataSource]="defaultFields" keyExpr="id" height="400">
+        <dxo-item-dragging
+          group="tasks"
+          [data]="defaultFields"
+          [allowReordering]="true"
+          [onDragStart]="onDragStart"
+          [onAdd]="onAdd"
+          [onRemove]="onRemove"
+          [onReorder]="onReorder">
+        </dxo-item-dragging>
+      </dx-list>
+    </ng-template>
+  </dxi-item>
+</dx-form>
+
+<div *ngIf="showGrid">
+  <dx-data-grid
+    [dataSource]="exportedData"
+    [columns]="defaultFields"
+    [showBorders]="true"
+    [columnAutoWidth]="true"
+    [searchPanel]="{ visible: true, highlightCaseSensitive: false }"
+    [rowAlternationEnabled]="true"
+    [paging]="{ pageSize: 10 }"
+    [pager]="{
+      showPageSizeSelector: true,
+      allowedPageSizes: [10, 20, 50],
+      showInfo: true
+    }"
+    [export]="{
+      enabled: true,
+      allowExportSelectedData: true
+    }"
+    >
+</dx-data-grid>
+</div>

@@ -1,0 +1,95 @@
+.main-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.content {
+  overflow: auto;
+  flex: 1; 
+}
+
+.header-toolbar {
+  flex-shrink: 0;
+  position: relative;
+  top: 0;
+}
+
+.sidebar {
+  width: 240px;
+  background-color: var(--dx-component-color-bg);
+  color: var(--dx-color-text);
+  border: 1px solid var(--dx-color-separator);
+  height: calc(100vh - 75px);
+  overflow: auto;
+  position: fixed;
+  transition: width 0.3s ease;
+}
+
+.sidebar.collapsed {
+  width: 60px;
+}
+
+.sidebar-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-links li  {
+  color: var(--dx-color-text);
+  display: flex;
+  gap: 20px;
+  padding: 15px 20px;
+  cursor: pointer;
+  overflow-x: hidden;
+  font-weight: bold;
+}
+
+  .sidebar-links li:hover {
+  background-color: var(--dx-color-separator);
+  border-radius: 10px;
+  font-weight: bold;
+}
+
+.link-text {
+  transition: opacity 0.3s ease, width 0.3s ease;
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sidebar-links li.active {
+  background-color: var(--dx-color-separator);
+  border-right: 3px solid var(--dx-color-text);
+  border-radius: 10px;
+  font-weight: bold;
+}
+
+.sidebar-links li .dx-icon{
+  font-size: 20px;
+}
+
+.maincontent{
+  margin-left: 240px;
+  padding: 20px;
+  transition: margin-left 0.3s ease;
+}
+
+.maincontent.collapsed {
+  margin-left: 60px;
+}
+
+.footer-toolbar {
+  flex-shrink: 0; 
+  position: relative;
+  bottom: 0;
+}
+
+.dx-toolbar {
+  border: 1px solid  var(--dx-color-separator);
+}
+
+.dx-button-has-text .dx-button-content .dx-button-text {
+  text-transform: none;
+}

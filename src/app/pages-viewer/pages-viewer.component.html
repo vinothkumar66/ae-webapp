@@ -1,0 +1,40 @@
+<span>Pages Viewer</span>
+
+<dx-data-grid
+  [dataSource]="dataList"
+  [showBorders]="true"
+  [columnAutoWidth]="true"
+  [rowAlternationEnabled]="true"
+  [searchPanel]="{
+    visible: true,
+    width: 240,
+    placeholder: 'Search...'
+  }"
+  [editing]="{
+    mode: 'row',
+    allowUpdating: true,
+    allowDeleting: true,
+    useIcons: true
+  }"
+  [paging]="{ pageSize: 10 }"
+  (onRowRemoving)="onDeleteRow($event)">
+  <dxi-column dataField="pageid" caption="Page ID"  [visible]="false" ></dxi-column>
+  <dxi-column dataField="pagename" caption="Page Name"></dxi-column>
+  <dxi-column dataField="pagetype" caption="Page Type" [allowEditing]="false"></dxi-column>
+  <dxi-column dataField="pageaccesstype" caption="Page Access Type" [allowEditing]="false"></dxi-column>
+  <dxi-column dataField="username" caption="Last Updated By" [allowEditing]="false"></dxi-column>
+  <dxi-column dataField="mod_time" caption="Last Updated Date" [allowEditing]="false"></dxi-column>
+
+  <dxi-column type="buttons">
+    <dxi-button
+        icon="eyeclose"
+        hint="Quick Access"
+    ></dxi-button>
+    <dxi-button
+        icon="check"
+        hint="Default Page"
+    ></dxi-button>
+    <dxi-button name="edit"></dxi-button>
+    <dxi-button name="delete"></dxi-button>
+  </dxi-column>
+</dx-data-grid>

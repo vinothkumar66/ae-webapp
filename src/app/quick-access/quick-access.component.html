@@ -1,0 +1,21 @@
+<span>Quick Access</span>
+
+<dx-data-grid 
+  [dataSource]="QuickAccessList"
+  [showBorders]="true"
+  [paging]="{ pageSize: 5 }"
+  [pager]="{
+    showPageSizeSelector: true,
+    allowedPageSizes: [5, 10, 20],
+    showInfo: true,
+    visible: true
+  }"
+  [searchPanel]="{
+    visible: true,
+    width: 240,
+    placeholder: 'Search...'
+  }"
+>
+  <dxi-column dataField="PageName" caption="Page Name"></dxi-column>
+  <dxi-column dataField="PageType" caption="Page Type"></dxi-column>
+</dx-data-grid>

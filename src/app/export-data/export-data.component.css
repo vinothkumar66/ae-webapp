@@ -1,0 +1,38 @@
+.export-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 16px;
+    margin-bottom: 15px;
+  }
+  
+  .filter-builder-form-item {
+    padding: 10px;
+    background-color: var(--dx-component-color-bg);
+    border: 1px solid var(--dx-color-separator);
+    border-radius: 8px;
+  }
+  
+  .results pre {
+    background: var(--dx-component-color-bg);
+    border: 1px solid var(--dx-color-separator);
+    padding: 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    white-space: pre-wrap;
+    overflow: auto;
+  }
+  
+  .button-container {
+    margin-top: 10px;
+    text-align: center;
+  }
+  
+  .grid-container {
+    margin-top: 10px;
+  }
+  
+  .dx-list {
+    border: 1px solid var(--dx-color-separator);
+    margin-top: 5px;
+  }

@@ -1,0 +1,32 @@
+<div class="login-wrapper">
+    <div class="login-box">
+      <div class="login-header">
+        <img src="../../assets/scpl.jpg" alt="" width="50" />
+        <h1>SAMA AE WEB CLIENT</h1>
+      </div>
+  
+      <form (ngSubmit)="login()">
+        <input type="text" placeholder="Username" required [(ngModel)]="username" name="username" autocomplete="off" />
+  
+        <div class="password-wrapper">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            placeholder="Password"
+            required
+            [(ngModel)]="password"
+            name="password"
+          />
+  
+          <dx-button
+            stylingMode="text"
+            [icon]="showPassword ? 'eyeopen' : 'eyeclose'"
+            (onClick)="togglePasswordVisibility()"
+            class="toggle-eye">
+          </dx-button>
+        </div>
+  
+        <button type="submit" class="signIn-button">Sign In</button>
+      </form>
+    </div>
+  </div>
+  

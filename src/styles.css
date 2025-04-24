@@ -1,0 +1,12 @@
+* {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+body {
+    margin: 0 !important;
+}
+
+.dx-multiview-item {
+    padding: 10px;
+}

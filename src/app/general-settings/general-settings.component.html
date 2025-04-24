@@ -1,0 +1,105 @@
+<dx-tab-panel
+  [selectedIndex]="0"
+  [animationEnabled]="true"
+  [deferRendering]="false"
+  tabsPosition="right"
+  [width]="'100%'"
+  [height]="'100%'">
+
+  <!-- Tab Titles -->
+  <dxi-item title="Change Password" template="ChangePassword"></dxi-item>
+  <dxi-item title="General Settings" template="GeneralSettings"></dxi-item>
+
+  <!-- Change Password Tab -->
+  <div *dxTemplate="let data of 'ChangePassword'">
+    <dx-form 
+      [formData]="changePasswordData"
+      [colCount]="2"
+      labelLocation="top">
+      
+      <dxi-item 
+        dataField="currentPassword" 
+        editorType="dxTextBox"
+        [editorOptions]="getEditorOptions('currentPassword')">
+      </dxi-item>
+  
+      <dxi-item 
+        dataField="newPassword" 
+        editorType="dxTextBox"
+        [editorOptions]="getEditorOptions('newPassword')">
+      </dxi-item>
+  
+      <dxi-item 
+        dataField="confirmPassword" 
+        editorType="dxTextBox"
+        [editorOptions]="getEditorOptions('confirmPassword')">
+      </dxi-item>
+    </dx-form>
+  
+    <div style="margin-top: 16px; display: flex; gap: 12px;">
+      <dx-button
+        text="Change"
+        type="default"
+        stylingMode="contained"
+        (onClick)="handleChange()">
+      </dx-button>
+  
+      <dx-button
+        text="Clear"
+        type="normal"
+        stylingMode="outlined"
+        (onClick)="handleClear()">
+      </dx-button>
+    </div>
+  </div>
+
+  <!-- General Settings Tab -->
+  <div *dxTemplate="let data of 'GeneralSettings'">
+    <dx-form 
+      [formData]="generalSettingsData"
+      [colCount]="2"
+      labelLocation="top">
+  
+      <dxi-item 
+        dataField="Name" 
+        editorType="dxTextBox"
+        [editorOptions]="{ placeholder: 'Name' }">
+      </dxi-item>
+  
+      <dxi-item>
+        <div class="custom-uploader">
+          <span>Pick Logo</span>
+          <dx-file-uploader
+            [multiple]="false"
+            [accept]="'image/jpeg, image/png, image/jpg'"
+            labelText=""
+            [uploadButtonText]="'Choose Logo...'"
+            (onValueChanged)="handleImageUpload($event)">
+          </dx-file-uploader>
+        </div>
+      </dxi-item>
+
+      <dxi-item>
+        <div class="custom-uploader">
+          <span>Pick Background Image</span>
+          <dx-file-uploader
+            [multiple]="false"
+            [accept]="'image/jpeg, image/png, image/jpg'"
+            labelText=""
+            [uploadButtonText]="'Choose Logo...'"
+            (onValueChanged)="handleBgImageUpload($event)">
+          </dx-file-uploader>
+        </div>
+      </dxi-item>
+    </dx-form>
+
+    <!-- Add Save Button Below the Form -->
+    <div class="form-action">
+      <dx-button 
+        text="Save" 
+        (onClick)="saveFormData()" 
+        type="default">
+      </dx-button>
+    </div>
+</div>
+</dx-tab-panel>

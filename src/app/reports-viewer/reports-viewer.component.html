@@ -1,0 +1,38 @@
+<span>Reports Viewer</span>
+
+<dx-tab-panel
+  width="100%"
+  [height]="418"
+  [animationEnabled]="true"
+  [swipeEnabled]="true"
+  tabsPosition="top"
+  stylingMode="secondary"
+  iconPosition="start">
+
+  <!-- Tab for Tree View with Built-in Search -->
+  <dxi-item icon="folder">
+    <dx-tree-view 
+      [items]="folderItems"
+      [searchEnabled]="true" 
+      searchMode="contains"
+      placeholder="Search in Tree">
+      <div *dxTemplate="let item of 'item'">
+        <i class="dx-icon dx-icon-folder"></i>
+        {{ item.text }}
+      </div>
+    </dx-tree-view>
+  </dxi-item>
+
+  <!-- Tab for List View with Built-in Search -->
+  <dxi-item icon="description">
+    <dx-list 
+      [items]="listItems"
+      [searchEnabled]="true"
+      placeholder="Search in List"
+      [height]="400">
+      <div *dxTemplate="let data of 'item'">
+        <div>{{ data }}</div>
+      </div>
+    </dx-list>
+  </dxi-item>
+</dx-tab-panel>

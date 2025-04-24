@@ -1,0 +1,79 @@
+<div class="main-layout">
+    <dx-toolbar [items]="headertoolbar" id="header-toolbar" class="header-toolbar"></dx-toolbar>
+  
+    <div class="content">
+        <aside class="sidebar">
+            <ul class="sidebar-links">
+                <li (click)="navigateTo('home')"
+                [ngClass]="{ active: currentRoute === '/home' }"
+                >
+                <span class="dx-icon dx-icon-dataarea"></span> 
+                <span class="link-text">Dashboard</span>
+                </li>
+                <li (click)="navigateTo('analytic')"
+                [ngClass]="{ active: currentRoute === '/analytic' }"
+                >
+                <span class="dx-icon dx-icon-datatrending"></span> 
+                <span class="link-text">Analytics Viewer</span>
+                </li>
+                <li (click)="navigateTo('realtime')"
+                [ngClass]="{ active: currentRoute === '/realtime' }"
+                >
+                <span class="dx-icon dx-icon-datausage"></span> 
+                <span class="link-text">Realtime Viewer</span>
+                </li>
+                <li (click)="navigateTo('export')"
+                [ngClass]="{ active: currentRoute === '/export' }"
+                >
+                <span class="dx-icon dx-icon-export"></span> 
+                <span class="link-text">Export Data</span>
+                </li>
+                <li (click)="navigateTo('reports')"
+                [ngClass]="{ active: currentRoute === '/reports' }"
+                >
+                <span class="dx-icon dx-icon-doc"></span> 
+                <span class="link-text">Reports Viewer</span>
+                </li>
+                <li (click)="navigateTo('pages')"
+                [ngClass]="{ active: currentRoute === '/pages' }"
+                >
+                <span class="dx-icon dx-icon-activefolder"></span>
+                <span class="link-text">Page Viewer</span>
+                </li>
+                <li (click)="navigateTo('quickaccess')"
+                [ngClass]="{ active: currentRoute === '/quickaccess' }"
+                >
+                <span class="dx-icon dx-icon-fieldchooser"></span> 
+                <span class="link-text">Quick Access</span>
+                </li>
+                <li (click)="navigateTo('hierarchy')"
+                [ngClass]="{ active: currentRoute === '/hierarchy' }"
+                >
+                <span class="dx-icon dx-icon-hierarchy"></span>
+                <span class="link-text">By Hierarchy</span>
+                </li>
+                <li (click)="navigateTo('analysis-settings')"
+                [ngClass]="{ active: currentRoute === '/analysis-settings' }">
+                <span class="dx-icon dx-icon-optionsgear"></span> 
+                <span class="link-text">Analysis Settings</span>
+                </li>
+                <li (click)="navigateTo('general-settings')"
+                [ngClass]="{ active: currentRoute === '/general-settings' }">
+                <span class="dx-icon dx-icon-preferences"></span> 
+                <span class="link-text">General Settings</span>
+                </li>
+                <li (click)="navigateTo('login')"
+                [ngClass]="{ active: currentRoute === '/login' }">
+                <span class="dx-icon dx-icon-runner"></span> 
+                <span class="link-text">Logout</span>
+                </li>
+            </ul>
+        </aside>
+        <div class="maincontent">
+            <router-outlet />
+        </div>
+    </div>
+  
+    <dx-toolbar [items]="footertoolbar" id="footer-toolbar" class="footer-toolbar"></dx-toolbar>
+  </div>
+  

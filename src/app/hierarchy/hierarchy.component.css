@@ -1,0 +1,34 @@
+.hierarchy-container {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+  }
+  
+  /* Left panel */
+  .tree-section {
+    flex: 1;
+    min-width: 500px;
+  }
+
+  .list-block .dx-list{
+    margin-top: 10px;
+  }
+  
+  /* Right panel */
+  .lists-section {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .list-block {
+    background: var(--dx-color-main-bg);
+    border-radius: 8px;
+    padding: 10px 15px;
+    box-shadow: 0 1px 3px var(--dx-color-separator);
+  }
+  
+  dx-tree-view, dx-list{
+    border: 1px solid var(--dx-color-separator);
+  }

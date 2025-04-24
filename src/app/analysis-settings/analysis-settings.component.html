@@ -1,0 +1,350 @@
+<div class="sett">
+  <span>Analysis Settings</span>
+</div>
+
+<dx-tab-panel [(selectedIndex)]="selectedTabIndex" tabsPosition="right" [animationEnabled]="true"
+[deferRendering]="false">
+  <dxi-item [title]="'EEMUA Standard'">
+    <dx-data-grid
+      #eemuaStandardGrid
+      [dataSource]="eemuaStandardData"
+      [showBorders]="true"
+      [rowAlternationEnabled]="true"
+      [hoverStateEnabled]="true"
+      [searchPanel]="{ visible: true, width: 240, placeholder: 'Search...' }"
+      [editing]="{ mode: 'row', allowUpdating: true, allowAdding: false, allowDeleting: false }"
+      [paging]="{ pageSize: 10 }"
+      (onToolbarPreparing)="onToolbarPreparing($event, 'eemuaStandard')"
+    >
+      <dxi-column
+        dataField="metricname"
+        caption="Metric Name"
+        [allowEditing]="false"
+      ></dxi-column>
+
+      <dxi-column
+        dataField="value"
+        caption="Value"
+        [allowEditing]="true"
+        alignment="left"
+        width="200"
+      ></dxi-column>
+    </dx-data-grid>
+  </dxi-item>
+
+  
+  <dxi-item [title]="'IEC Standard'">
+    <dx-data-grid
+      #iecStandardGrid
+      [dataSource]="iecStandardData"
+      [showBorders]="true"
+      [rowAlternationEnabled]="true"
+      [hoverStateEnabled]="true"
+      [searchPanel]="{ visible: true, width: 240, placeholder: 'Search...' }"
+      [editing]="{ mode: 'row', allowUpdating: true, allowAdding: false, allowDeleting: false }"
+      [paging]="{ pageSize: 10 }"
+      (onToolbarPreparing)="onToolbarPreparing($event, 'iecStandard')"
+    >
+      <!-- Read-only 'metricname' shown first -->
+      <dxi-column
+        dataField="metricname"
+        caption="Metric Name"
+        [allowEditing]="false"
+      ></dxi-column>
+  
+      <!-- Editable 'value' shown second -->
+      <dxi-column
+        dataField="value"
+        caption="Value"
+        [allowEditing]="true"
+        alignment="left"
+        [width]="300"
+      ></dxi-column>
+    </dx-data-grid>
+  </dxi-item>
+  
+  <dxi-item [title]="'EEMUA Calculation'">
+    <dx-data-grid
+      #eemuaCalculationGrid
+      [dataSource]="eemuaCalculationData"
+      [showBorders]="true"
+      [rowAlternationEnabled]="true"
+      [hoverStateEnabled]="true"
+      [searchPanel]="{ visible: true, width: 240, placeholder: 'Search...' }"
+      [editing]="{ mode: 'row', allowUpdating: true, allowAdding: true, allowDeleting: true }"
+      [paging]="{ pageSize: 5 }"
+      (onToolbarPreparing)="onToolbarPreparing($event, 'eemuaCalculation')"
+    >
+      <!-- Editable 'performancecategory' -->
+      <dxi-column
+        dataField="performancecategory"
+        caption="Performance Category"
+        [allowEditing]="true"
+      ></dxi-column>
+  
+      <!-- Editable 'averagealarmper10mins' -->
+      <dxi-column
+        dataField="averagealarmper10mins"
+        caption="Average Alarm Per 10 Minutes"
+        [allowEditing]="true"
+        alignment="right"
+      ></dxi-column>
+  
+      <!-- Editable 'peakalarmper10mins' -->
+      <dxi-column
+        dataField="peakalarmper10mins"
+        caption="Peak Alarm Per 10 Minutes"
+        [allowEditing]="true"
+        alignment="right"
+      ></dxi-column>
+  
+      <!-- Editable 'percent10minsgreater5alarms' -->
+      <dxi-column
+        dataField="percent10minsgreater5alarms"
+        caption="Percent of 10 mins > 5 Alarms"
+        [allowEditing]="true"
+        alignment="right"
+      ></dxi-column>
+  
+      <!-- Editable 'color' with a color picker -->
+      <dxi-column
+        dataField="color"
+        caption="Color"
+        [allowEditing]="true"
+      >
+        <ng-template dxTemplate="editorCell" let-cellData let-column="column">
+          <dx-color-box
+            [(value)]="cellData.value"
+            [value]="cellData.value"
+          ></dx-color-box>
+        </ng-template>
+      </dxi-column>
+  
+      <!-- Editable 'eeumacalucationid' (hidden from display but editable) -->
+      <dxi-column
+        dataField="eeumacalucationid"
+        caption="EEUMA Calculation ID"
+        [allowEditing]="true"
+        [visible]="false"
+      ></dxi-column>
+    </dx-data-grid>
+  </dxi-item>  
+  
+  <dxi-item [title]="'Analysis Setting'">
+    <dx-data-grid
+      #analysisSettingGrid
+      [dataSource]="analysisSettingData"
+      [searchPanel]="{ visible: true, width: 240, placeholder: 'Search...' }"
+      [editing]="{ mode: 'row', allowUpdating: true, allowAdding: false, allowDeleting: false }"
+      [showBorders]="true"
+      [rowAlternationEnabled]="true"
+      [hoverStateEnabled]="true"
+      [paging]="{ pageSize: 10 }"
+      (onToolbarPreparing)="onToolbarPreparing($event, 'analysisSetting')"
+    >
+    <dxi-column dataField="chatteringmins" caption="Chattering Mins" [allowEditing]="true"></dxi-column>
+    <dxi-column dataField="chatteringcount" caption="Chattering Count" [allowEditing]="true"></dxi-column>
+    <dxi-column dataField="mostfrequent" caption="Most Frequent" [allowEditing]="true"></dxi-column>
+    <dxi-column dataField="floodmins" caption="Flood Mins" [allowEditing]="true"></dxi-column>
+    <dxi-column dataField="floodstartcount" caption="Flood Start Count" [allowEditing]="true"></dxi-column>
+    <dxi-column dataField="floodstopcount" caption="Flood Stop Count" [allowEditing]="true"></dxi-column>
+    <dxi-column dataField="afmcount" caption="AFM Count" [allowEditing]="true"></dxi-column>
+    <dxi-column dataField="daetcount" caption="DAET Count" [allowEditing]="true"></dxi-column>
+    <dxi-column dataField="staledays" caption="Stale Days" [allowEditing]="true"></dxi-column>
+    </dx-data-grid>
+  </dxi-item>  
+  
+  <dxi-item [title]="'Analysis Duration'">
+    <dx-data-grid
+      #analysisDurationGrid
+      [dataSource]="analysisDurationData"
+      [searchPanel]="{ visible: true, width: 240, placeholder: 'Search...' }"
+      [editing]="{ mode: 'row', allowUpdating: true, allowAdding: true, allowDeleting: true }"
+      [showBorders]="true"
+      [rowAlternationEnabled]="true"
+      [hoverStateEnabled]="true"
+      [paging]="{ pageSize: 10 }"
+      (onToolbarPreparing)="onToolbarPreparing($event, 'analysisDuration')"
+    >
+      <!-- Define columns using dxi-column for Analysis Duration -->
+      <dxi-column dataField="analysistype" caption="Analysis Type"></dxi-column>
+      <dxi-column dataField="durationinsecs" caption="Duration (Secs)" alignment="left"></dxi-column>
+      <dxi-column dataField="alias" caption="Alias"></dxi-column>
+    </dx-data-grid>
+  </dxi-item>
+  
+  <dxi-item [title]="'Priority Attribute'">
+    <dx-data-grid
+      #priorityAttributeGrid
+      [dataSource]="priorityAttributeData"
+      [searchPanel]="{ visible: true, width: 240, placeholder: 'Search...' }"
+      [editing]="{ mode: 'row', allowUpdating: true, allowAdding: true, allowDeleting: true }"
+      [showBorders]="true"
+      [rowAlternationEnabled]="true"
+      [hoverStateEnabled]="true"
+      [paging]="{ pageSize: 10 }"
+      (onToolbarPreparing)="onToolbarPreparing($event, 'priorityAttribute')"
+    >
+      <!-- Define columns using dxi-column for Priority Attribute -->
+      <dxi-column dataField="priorityname" caption="Priority Name"></dxi-column>
+      <dxi-column dataField="area" caption="Area"></dxi-column>
+      <dxi-column dataField="isastandard" caption="ISA Standard (%)"></dxi-column>
+      <dxi-column dataField="iecstandard" caption="IEC Standard (%)"></dxi-column>
+      <dxi-column dataField="dcssettings" caption="DCS Settings (%)"></dxi-column>
+      <dxi-column dataField="color" caption="Color" width="100">
+        <ng-template let-data="data">
+          <div [style.background-color]="data.color" class="color-box"></div>
+        </ng-template>
+      </dxi-column>
+    </dx-data-grid>
+  </dxi-item>
+  
+  
+  <dxi-item [title]="'Area Operators'">
+    <dx-data-grid
+      #areaOperatorsGrid
+      [dataSource]="areaOperatorsData"
+      [searchPanel]="{ visible: true, width: 240, placeholder: 'Search...' }"
+      [editing]="{ mode: 'row', allowUpdating: true, allowAdding: false, allowDeleting: false }"
+      [showBorders]="true"
+      [rowAlternationEnabled]="true"
+      [hoverStateEnabled]="true"
+      [paging]="{ pageSize: 10 }"
+      (onToolbarPreparing)="onToolbarPreparing($event, 'areaOperators')"
+    >
+      <!-- Define columns using dxi-column for Area Operators -->
+      <dxi-column dataField="area" caption="Area"></dxi-column>
+      <dxi-column dataField="operartors" caption="Operators" alignment="left" width="300"></dxi-column>
+    </dx-data-grid>
+  </dxi-item>
+  
+  
+  <dxi-item [title]="'Performance Rating'">
+    <div class="grid-wrapper">
+  
+      <!-- Operator Load in Normal Operation -->
+      <div class="grid-container">
+        <span>Operator Load in Normal Operation</span>
+      <dx-data-grid
+        [dataSource]="normalOperationData"
+        [columns]="[
+          { dataField: 'rating', caption: 'Rating', sortOrder: 'asc', },
+          { dataField: 'noofdaysfrom', caption: 'Days From' },
+          { dataField: 'noofdaysto', caption: 'Days To' }
+        ]"
+        [searchPanel]="{ visible: true }"
+        [editing]="{ mode: 'row', allowUpdating: true, allowAdding: false, allowDeleting: false }"
+        [showBorders]="true"
+        [rowAlternationEnabled]="true"
+        [hoverStateEnabled]="true"
+        [paging]="{ pageSize: 10 }"
+      ></dx-data-grid>
+      </div>
+  
+      <!-- Operator Load in Upset Operation -->
+      <div class="grid-container">
+        <span>Operator Load in Upset Operation</span>
+      <dx-data-grid
+        [dataSource]="upsetOperationData"
+        [columns]="[
+          { dataField: 'rating', caption: 'Rating', sortOrder: 'asc', },
+          { dataField: 'noofhoursfrom', caption: 'Hours From' },
+          { dataField: 'noofhoursto', caption: 'Hours To' }
+        ]"
+        [searchPanel]="{ visible: true }"
+        [editing]="{ mode: 'row', allowUpdating: true, allowAdding: false, allowDeleting: false }"
+        [showBorders]="true"
+        [rowAlternationEnabled]="true"
+        [hoverStateEnabled]="true"
+        [paging]="{ pageSize: 10 }"
+      ></dx-data-grid>
+      </div>
+  
+      <!-- Operating in Alarm State - Stale Alarm -->
+      <div class="grid-container">
+        <span>Operating in Alarm State - Stale Alarm</span>
+      <dx-data-grid
+        [dataSource]="alarmStateData"
+        [columns]="[
+          { dataField: 'rating', caption: 'Rating', sortOrder: 'asc', },
+          { dataField: 'percentagefrom', caption: 'Percentage From' },
+          { dataField: 'percentageto', caption: 'Percentage To' }
+        ]"
+        [searchPanel]="{ visible: true }"
+        [editing]="{ mode: 'row', allowUpdating: true, allowAdding: false, allowDeleting: false }"
+        [showBorders]="true"
+        [rowAlternationEnabled]="true"
+        [hoverStateEnabled]="true"
+        [paging]="{ pageSize: 10 }"
+      ></dx-data-grid>
+      </div>
+    </div>
+  </dxi-item>
+  
+  <dxi-item [title]="'Performance Dashboard'">
+    <!-- Container for both grids -->
+    <div class="performance-dashboard-container">
+      
+      <!-- AFM Grid -->
+      <div class="grid-container">
+        <span>AFM Performance Dashboard</span>
+        <dx-data-grid
+          [dataSource]="performanceDashboardDataAFM"
+          [searchPanel]="{ visible: true, width: 240, placeholder: 'Search...' }"
+          [editing]="{ mode: 'row', allowUpdating: true, allowAdding: false, allowDeleting: false }"
+          [showBorders]="true"
+          [rowAlternationEnabled]="true"
+          [hoverStateEnabled]="true"
+          [paging]="{ pageSize: 10 }"
+          (onToolbarPreparing)="onToolbarPreparing($event, 'AFM')"
+        >
+        <dxi-column
+          dataField="metricname"
+          caption="Metric Name"
+          [allowEditing]="false"
+        ></dxi-column>
+
+        <dxi-column
+          dataField="value"
+          caption="Value"
+          [allowEditing]="true"
+          alignment="left"
+          width="200"
+        ></dxi-column>
+        </dx-data-grid>
+      </div>
+  
+      <!-- DAET Grid -->
+      <div class="grid-container">
+        <span>DAET Performance Dashboard</span>
+        <dx-data-grid
+          [dataSource]="performanceDashboardDataDAET"
+          [searchPanel]="{ visible: true, width: 240, placeholder: 'Search...' }"
+          [editing]="{ mode: 'row', allowUpdating: true, allowAdding: false, allowDeleting: false }"
+          [showBorders]="true"
+          [rowAlternationEnabled]="true"
+          [hoverStateEnabled]="true"
+          [paging]="{ pageSize: 10 }"
+          (onToolbarPreparing)="onToolbarPreparing($event, 'DAET')"
+        >
+        <dxi-column
+          dataField="metricname"
+          caption="Metric Name"
+          [allowEditing]="false"
+        ></dxi-column>
+
+        <dxi-column
+          dataField="value"
+          caption="Value"
+          [allowEditing]="true"
+          alignment="left"
+          width="200"
+        ></dxi-column>
+        </dx-data-grid>
+      </div>
+      
+    </div>
+  </dxi-item>
+  </dx-tab-panel>
+  
+  
