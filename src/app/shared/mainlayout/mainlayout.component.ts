@@ -16,55 +16,10 @@ import { filter } from 'rxjs';
 })
 export class MainlayoutComponent {
   currentRoute: string = '';
-  themeMode: any = 'light'; 
+  themeMode: any = 'light';
+  username: any = localStorage.getItem('Username');
 
-  headertoolbar = [
-    {
-      widget: 'dxButton',
-      location: 'before',
-      options: {
-        icon: 'menu',
-        stylingMode: 'text',
-        onClick: () => {
-          const sidebar = document.querySelector('.sidebar');
-          const content = document.querySelector('.maincontent');
-          sidebar?.classList.toggle('collapsed');
-          content?.classList.toggle('collapsed');
-        }
-      },
-    },
-    {
-      location: 'center',
-      text: 'SAMA AE'
-    },
-    {
-      widget: 'dxButton',
-      location: 'after',
-      options: {
-        icon: this.themeMode === 'light' ? 'moon' : 'sun',
-        stylingMode: 'text',
-        onClick: () => {
-          this.toggleTheme();
-        }
-      },
-    },
-    {
-      location: 'after',
-      text: 'Username'
-    },
-    {
-      widget: 'dxButton',
-      location: 'after',
-      options: {
-        icon: 'login',
-        stylingMode: 'text',
-        onClick: () => {
-          localStorage.clear();
-          this.router.navigate(['login']);
-        }
-      },
-    },
-  ];
+  headertoolbar: any = [];
 
   footertoolbar = [
     {
@@ -73,7 +28,11 @@ export class MainlayoutComponent {
     }
   ];
 
-  constructor(private router: Router){
+  ngOnInit(): void {
+    this.updateHeaderToolbar(); 
+  }
+
+  constructor(private router: Router) {
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: NavigationEnd) => {
@@ -84,12 +43,17 @@ export class MainlayoutComponent {
   navigateTo(route: string) {
     if(route === 'login'){
       localStorage.clear();
+    } else if (route === 'analytic') {
+      localStorage.removeItem('AT_Properties');
+      localStorage.removeItem('Analysis');
+    } else if (route === 'realtime') {
+      localStorage.removeItem('RT_Properties');
     }
     this.router.navigate([route]);
   }
 
   toggleTheme() {
-    const head = document.head;
+    const head = document.head; 
     const existingLink = document.getElementById('theme-style') as HTMLLinkElement;
   
     const themeHref = this.themeMode === 'light'
@@ -136,6 +100,7 @@ export class MainlayoutComponent {
         location: 'after',
         options: {
           icon: this.themeMode === 'light' ? 'moon' : 'sun',
+          hint: this.themeMode === 'light' ? 'Switch to Dark' : 'Switch to Light',
           stylingMode: 'text',
           onClick: () => {
             this.toggleTheme();
@@ -144,7 +109,7 @@ export class MainlayoutComponent {
       },
       {
         location: 'after',
-        text: 'Username'
+        text: this.username
       },
       {
         widget: 'dxButton',

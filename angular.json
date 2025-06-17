@@ -39,7 +39,8 @@
             ],
             "styles": [
               "src/styles.css",
-              "node_modules/devextreme/dist/css/dx.material.blue.light.css"
+              "node_modules/devextreme/dist/css/dx.material.blue.light.css",
+              "node_modules/gridstack/dist/gridstack.min.css"
             ],
             "scripts": [
               "node_modules/jszip/dist/jszip.min.js",
@@ -52,8 +53,8 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumWarning": "15MB",
+                  "maximumError": "20MB"
                 },
                 {
                   "type": "anyComponentStyle",

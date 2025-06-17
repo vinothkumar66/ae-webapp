@@ -1,1 +1,443 @@
-<span>Analytic Viewer</span>
+
+<div class="analysis-header">
+  <span>Analytic Viewer</span>
+
+  <div class="button-container">
+    <dx-button text="Add Control" icon="add" type="default" (onClick)="onAddClicked()"></dx-button>
+    <dx-button text="Save" icon="save" type="success" (onClick)="onSaveClicked()"></dx-button>
+  </div>
+</div>
+
+<div *ngIf="dataFromStorage">
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <span>{{ cardTitle }}</span> - <span style="color: var(--dx-color-icon);"> {{ analyticType }}</span>
+      </div>
+      <div class="card-header-buttons">
+        <dx-button icon="preferences" (onClick)="onSettingsClicked()"></dx-button>
+        <dx-button icon="trash" (onClick)="onDeleteClicked()"></dx-button>
+      </div>
+    </div>
+
+    <div class="card-body" *ngIf="showId == 55 || showId == 56">
+      <div class="chart-container"
+        *ngIf="showChartOnly">
+        <dx-chart [dataSource]="chartData" [export]="{ enabled: true }">
+          <dxo-legend [visible]="false"></dxo-legend>
+
+          <dxi-series *ngFor="let series of chartSeries"
+            [type]="series.type"
+            [argumentField]="series.argumentField"
+            [valueField]="series.valueField"
+            [name]="series.name">
+          </dxi-series>
+
+          <dxi-value-axis *ngFor="let axis of chartAxis"
+            [position]="axis.position"
+            [title]="axis.title"
+            [showZero]="axis.showZero"
+            [tickInterval]="axis.tickInterval"
+            [valueMarginsEnabled]="axis.valueMarginsEnabled"
+            [constantLines]="axis.constantLines">
+          </dxi-value-axis>
+        </dx-chart>
+      </div>
+
+      <div class="table-container"
+        *ngIf="showTableOnly">
+        <dx-data-grid [dataSource]="tableData" [showBorders]="true" [rowAlternationEnabled]="true" [export]="{ enabled: true }">
+          <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[5, 10, 'all']" [showInfo]="true" [showNavigationButtons]="true" [displayMode]="'full'"></dxo-pager>
+          <dxo-paging [enabled]="true" [pageSize]="5"></dxo-paging>
+          <dxo-search-panel [visible]="true" [highlightCaseSensitive]="true"></dxo-search-panel>
+          <dxi-column *ngFor="let column of tableColumns" [dataField]="column"></dxi-column>
+        </dx-data-grid>
+      </div>
+    </div>
+
+    <div class="card-body" *ngIf="showId == 62">
+      <dx-data-grid
+        [dataSource]="eeumaData"
+        [showBorders]="true"
+        [cellHintEnabled]="true"
+        [rowAlternationEnabled]="true"
+        [export]="{ enabled: true }"
+        (onToolbarPreparing)="onToolbarPreparing($event)"
+      >
+        <dxo-paging [enabled]="false"></dxo-paging>
+        <dxi-column dataField="Metric" caption="Metric" width="500" cssClass="center-header"></dxi-column>
+        <dxi-column caption="Target" cssClass="center-header">
+          <dxi-column dataField="Col1" caption="Min" cssClass="center-header"></dxi-column>
+          <dxi-column dataField="Col2" caption="Max" cssClass="center-header"></dxi-column>
+        </dxi-column>
+        <dxi-column dataField="Col3" caption="Value" cssClass="center-header"></dxi-column>
+      </dx-data-grid>
+
+      <dx-data-grid
+        [dataSource]="eeumacalcu"
+        [showBorders]="true"
+        [cellHintEnabled]="true"
+        [rowAlternationEnabled]="true"
+        class="eeumacalcu"
+        (onToolbarPreparing)="onToolbarEeumacalcu($event)"
+      >
+      </dx-data-grid>
+    </div>
+
+    <div class="card-body" *ngIf="showId == 63">
+      <dx-data-grid
+        [dataSource]="iecData"
+        [showBorders]="true"
+        [cellHintEnabled]="true"
+        [rowAlternationEnabled]="true"
+        [export]="{ enabled: true }"
+        (onToolbarPreparing)="onToolbarPreparing($event)"
+        (onCellPrepared)="onCellPrepared($event)"
+      >
+        <dxo-paging [enabled]="false"></dxo-paging>
+        <dxi-column caption="Alarms Performance Metrics" cssClass="center-header">
+          <dxi-column dataField="Metric" caption="Metric" cssClass="center-header"></dxi-column>
+          <dxi-column caption="Target" cssClass="center-header">
+            <dxi-column dataField="Target1" caption="Target 1" cssClass="table-hidden center-header"></dxi-column>
+            <dxi-column dataField="Target2" caption="Target 2" cssClass="table-hidden center-header"></dxi-column>
+          </dxi-column>
+          <dxi-column dataField="Col1" caption="Value" cssClass="center-header" width="150"></dxi-column>
+        </dxi-column>
+      </dx-data-grid>
+    </div>
+
+    <div class="card-body" *ngIf="showId == 73">
+      <dx-chart
+        [dataSource]="AlmChartData"
+        [valueAxis]="valueAxisConfig"
+        [argumentAxis]="{ argumentType: 'string', title: 'Area', discreteAxisDivisionMode: 'crossLabels' }"
+        [export]="{ enabled: true }"
+      >
+        <dxi-series
+          *ngFor="let series of seriesData"
+          [valueField]="series.valueField"
+          argumentField="Area"
+          [name]="series.name"
+          type="bar"
+          [color]="series.color"
+        ></dxi-series>
+      </dx-chart>
+    </div>
+
+    <div class="card-body AlmDash" *ngIf="showId == 64">
+      <dx-data-grid
+        [dataSource]="AlmDashboardData"
+        [showBorders]="true"
+        [cellHintEnabled]="true"
+        [rowAlternationEnabled]="true"
+        width="100%"
+      >
+        <dxo-paging [enabled]="false"></dxo-paging>
+        <dxi-column dataField="Area" caption="Area" cssClass="center-header"></dxi-column>
+        <dxi-column caption="DAET" dataField="DAET_Count" cssClass="center-header">
+          <ng-template let-data="data" dxTemplate="cell">
+            <span>
+              <dx-button icon="preferences"></dx-button>
+              {{ data.DAET_Count }}
+            </span>
+          </ng-template>
+        </dxi-column>
+        <dxi-column dataField="AFM_Count" caption="AFM" cssClass="center-header"></dxi-column>
+      </dx-data-grid>
+
+      <div class="AlmDash-main">
+        <div class="AlmDash-Content">
+          <div>AFM: Alarm Flood Metric</div><br>
+          <span>Number of hours in the month that had any periods exceeding 10 alarms in 10 minutes.</span>
+        </div>
+        <div class="AlmDash-Content">
+          <div>DAET: Days Alarms Exceed Target</div><br>
+          <span>Number of days in the month that exceeded 300 alarms.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body" *ngIf="showId == 52 || showId == 54 || showId == 53">
+      <dx-chart
+        [dataSource]="AlmsPerOprPositionData"
+        [argumentAxis]="{ argumentType: 'string', title: 'Datetime', discreteAxisDivisionMode: 'crossLabels' }"
+        [export]="{ enabled: true }"
+        [valueAxis]="valueAxisConfig ? valueAxisConfig : undefined"
+      >
+        <dxi-series
+          *ngFor="let series of seriesData"
+          [valueField]="series.valueField"
+          [argumentField]="series.argumentField"
+          [name]="series.name"
+          type="bar"
+          [color]="series.color"
+        ></dxi-series>
+
+        <dxo-legend verticalAlignment="top" horizontalAlignment="center"></dxo-legend>
+      </dx-chart>
+
+      <dx-data-grid
+        [dataSource]="AlmsPerOprPositionTableData"
+        [showBorders]="true"
+        [cellHintEnabled]="true"
+        [rowAlternationEnabled]="true"
+        [export]="{ enabled: true }"
+      >
+        <dxo-paging [pageSize]="5"></dxo-paging>
+        <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[5, 10, 'all']" [showInfo]="true" [showNavigationButtons]="true" [displayMode]="'full'"></dxo-pager>
+        <dxo-search-panel [visible]="true" [width]="240" placeholder="Search..."></dxo-search-panel>
+      </dx-data-grid>
+    </div>
+
+    <div class="card-body" *ngIf="showId == 61">
+      <dx-chart
+        [dataSource]="AlarmVsOperatorData[0].data"
+        [export]="{ enabled: true }"
+        [rotated]="false"
+      >
+        <dxo-legend [visible]="false"></dxo-legend>
+
+        <dxi-pane *ngFor="let pane of AlarmVsOperatorData[0].pane" [name]="pane.name"></dxi-pane>
+
+        <dxi-series
+          *ngFor="let series of AlarmVsOperatorData[0].series"
+          [type]="series.type"
+          [valueField]="series.valueField"
+          [argumentField]="series.argumentField"
+          [name]="series.name"
+          [pane]="series.pane"
+        >
+        </dxi-series>
+
+        <dxi-value-axis
+          *ngFor="let axis of AlarmVsOperatorData[0].axis"
+          [position]="axis.position"
+          [pane]="axis.pane"
+          [tickInterval]="axis.tickInterval"
+          [valueMarginsEnabled]="axis.valueMarginsEnabled"
+          [showZero]="axis.showZero"
+        >
+          <dxo-title [text]="axis.title.text"></dxo-title>
+        </dxi-value-axis>
+      </dx-chart>
+
+      <dx-data-grid
+        [dataSource]="AlarmVsOperatorTableData"
+        [showBorders]="true"
+        [cellHintEnabled]="true"
+        [rowAlternationEnabled]="true"
+        [export]="{ enabled: true }"
+      >
+        <dxo-paging [pageSize]="5"></dxo-paging>
+        <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[5, 10, 'all']" [showInfo]="true" [showNavigationButtons]="true" [displayMode]="'full'"></dxo-pager>
+        <dxo-search-panel [visible]="true" [width]="240" placeholder="Search..."></dxo-search-panel>
+      </dx-data-grid>
+    </div>
+
+    <div class="card-body" *ngIf="showId == 72 || showId == 50">
+      <dx-chart
+        [dataSource]="ChatteringData[0].data"
+        [export]="{ enabled: true }"
+      >
+        <dxo-legend [visible]="false"></dxo-legend>
+
+      </dx-chart>
+
+      <dx-data-grid
+        [dataSource]="ChatteringTableData"
+        [showBorders]="true"
+        [cellHintEnabled]="true"
+        [rowAlternationEnabled]="true"
+        [export]="{ enabled: true }"
+      >
+        <dxo-paging [pageSize]="5"></dxo-paging>
+        <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[5, 10, 'all']" [showInfo]="true" [showNavigationButtons]="true" [displayMode]="'full'"></dxo-pager>
+        <dxo-search-panel [visible]="true" [width]="240" placeholder="Search..."></dxo-search-panel>
+      </dx-data-grid>
+    </div>
+
+    <div class="card-body" *ngIf="showId == 51">
+      <dx-chart
+        [dataSource]="FleedingData[0].data"
+        [export]="{ enabled: true }"
+      >
+        <dxi-series
+          *ngFor="let s of FleedingData[0].series"
+          [type]="s.type"
+          [argumentField]="s.argumentField"
+          [valueField]="s.valueField"
+          [name]="s.name"
+          [axis]="s.axis"
+        ></dxi-series>
+
+        <dxi-value-axis
+          *ngFor="let a of FleedingData[0].axis"
+          [position]="a.position"
+          [name]="a.name"
+          [showZero]="a.showZero"
+          [tickInterval]="a.tickInterval"
+          [valueMarginsEnabled]="a.valueMarginsEnabled"
+        >
+          <dxo-title [text]="a.title.text"></dxo-title>
+        </dxi-value-axis>
+
+        <dxo-legend verticalAlignment="top" horizontalAlignment="center"></dxo-legend>
+      </dx-chart>
+
+      <dx-data-grid
+        [dataSource]="FleedingTableData"
+        [showBorders]="true"
+        [cellHintEnabled]="true"
+        [rowAlternationEnabled]="true"
+        [export]="{ enabled: true }"
+      >
+        <dxo-paging [pageSize]="5"></dxo-paging>
+        <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[5, 10, 'all']" [showInfo]="true" [showNavigationButtons]="true" [displayMode]="'full'"></dxo-pager>
+        <dxo-search-panel [visible]="true" [width]="240" placeholder="Search..."></dxo-search-panel>
+      </dx-data-grid>
+    </div>
+
+    <div class="card-body" *ngIf="showId == 60  || showId == 48 || showId == 49 || showId == 67">
+      <dx-chart
+        *ngIf="FloodData.length"
+        [dataSource]="FloodData[0].data"
+        [export]="{ enabled: true }"
+      >
+        <dxi-series
+          *ngFor="let s of FloodData[0].series"
+          [type]="s.type"
+          [argumentField]="s.argumentField"
+          [valueField]="s.valueField"
+          [name]="s.name"
+        ></dxi-series>
+
+        <dxo-value-axis>
+          <dxo-title [text]="FloodData[0].axis[0].title.text"></dxo-title>
+
+          <dxi-constant-line
+            *ngFor="let line of FloodData[0].axis[0].constantLines"
+            [value]="line.value"
+            [color]="line.color"
+            [width]="line.width"
+            [dashStyle]="line.dashStyle"
+          >
+            <dxo-label
+              [visible]="line.label.visible"
+              [position]="line.label.position"
+              [text]="line.label.text"
+            >
+              <dxo-font
+                [color]="line.label.font.color"
+                [weight]="line.label.font.weight"
+                [size]="line.label.font.size"
+              ></dxo-font>
+            </dxo-label>
+          </dxi-constant-line>
+        </dxo-value-axis>
+
+        <dxo-legend verticalAlignment="top" horizontalAlignment="center"></dxo-legend>
+      </dx-chart>
+
+      <dx-data-grid
+        [dataSource]="FloodTableData"
+        [showBorders]="true"
+        [cellHintEnabled]="true"
+        [rowAlternationEnabled]="true"
+        [export]="{ enabled: true }"
+      >
+        <dxo-paging [pageSize]="5"></dxo-paging>
+        <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[5, 10, 'all']" [showInfo]="true" [showNavigationButtons]="true" [displayMode]="'full'"></dxo-pager>
+        <dxo-search-panel [visible]="true" [width]="240" placeholder="Search..."></dxo-search-panel>
+      </dx-data-grid>
+    </div>
+
+    <div class="card-body" *ngIf="showId == 26 || showId == 30 || showId == 29 || showId == 27 || showId == 28 || showId == 1 || showId == 12 || showId == 9
+     || showId == 8 || showId == 5 || showId == 2 || showId == 11 || showId == 10 || showId == 6 || showId == 4 || showId == 7 || showId == 3 || showId == 33
+     || showId == 31 || showId == 76 || showId == 21 || showId == 18 || showId == 25 || showId == 24 || showId == 13 || showId == 14 || showId == 16 || showId == 17 || showId == 22
+     || showId == 15 || showId == 19 || showId == 20 || showId == 23 || showId == 32 || showId == 57 || showId == 58">
+      <dx-chart
+        [dataSource]="FrequencyData[0]?.data"
+        [export]="{ enabled: true }"
+      >
+        <dxo-common-series-settings argumentField="tagno.parameter"></dxo-common-series-settings>
+    
+        <dxi-series
+          *ngFor="let series of FrequencyData[0]?.series"
+          [type]="series.type"
+          [valueField]="series.valueField"
+          [name]="series.name"
+          [axis]="series.axis"
+        ></dxi-series>
+    
+        <dxi-value-axis
+          *ngFor="let ax of FrequencyData[0]?.axis"
+          [name]="ax.name"
+          [position]="ax.position"
+          [showZero]="ax.showZero"
+          [tickInterval]="ax.tickInterval"
+          [valueMarginsEnabled]="ax.valueMarginsEnabled"
+        >
+          <dxo-title [text]="ax.title.text"></dxo-title>
+        </dxi-value-axis>
+    
+        <dxo-legend verticalAlignment="top" horizontalAlignment="center"></dxo-legend>
+      </dx-chart>
+    
+      <dx-data-grid
+        [dataSource]="FrequencyTableData"
+        [showBorders]="true"
+        [cellHintEnabled]="true"
+        [rowAlternationEnabled]="true"
+        [export]="{ enabled: true }"
+      >
+        <dxo-paging [pageSize]="5"></dxo-paging>
+        <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[5, 10, 'all']" [showInfo]="true" [showNavigationButtons]="true" [displayMode]="'full'"></dxo-pager>
+        <dxo-search-panel [visible]="true" [width]="240" placeholder="Search..."></dxo-search-panel>
+      </dx-data-grid>
+    </div>  
+    
+    <div class="card-body" *ngIf="showId == 77 || showId == 47 || showId == 45">
+      <dx-data-grid
+        [dataSource]="SOETableData"
+        [showBorders]="true"
+        [cellHintEnabled]="true"
+        [rowAlternationEnabled]="true"
+        [export]="{ enabled: true }"
+      >
+        <dxo-paging [pageSize]="5"></dxo-paging>
+        <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[5, 10, 'all']" [showInfo]="true" [showNavigationButtons]="true" [displayMode]="'full'"></dxo-pager>
+        <dxo-search-panel [visible]="true" [width]="240" placeholder="Search..."></dxo-search-panel>
+      </dx-data-grid>
+    </div>
+
+    <div class="card-body" *ngIf="showId == 46 || showId == 34 || showId == 35 || showId == 38 || showId == 39 || showId == 37 || showId == 36 || showId == 43 || showId == 44 || showId == 42 || showId == 41 || showId == 40">
+      <dx-chart
+        *ngIf="StandingACKData.length"
+        [dataSource]="StandingACKData[0].data"
+        [export]="{ enabled: true }"
+      >
+        <dxi-series
+          *ngFor="let s of StandingACKData[0].series"
+          [type]="s.type"
+          [argumentField]="s.argumentField"
+          [valueField]="s.valueField"
+          [name]="s.name"
+        ></dxi-series>
+
+        <dxo-legend verticalAlignment="top" horizontalAlignment="center"></dxo-legend>
+      </dx-chart>
+
+      <dx-data-grid
+        [dataSource]="StandingACKTableData"
+        [showBorders]="true"
+        [cellHintEnabled]="true"
+        [rowAlternationEnabled]="true"
+        [export]="{ enabled: true }"
+      >
+        <dxo-paging [pageSize]="5"></dxo-paging>
+        <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[5, 10, 'all']" [showInfo]="true" [showNavigationButtons]="true" [displayMode]="'full'"></dxo-pager>
+        <dxo-search-panel [visible]="true" [width]="240" placeholder="Search..."></dxo-search-panel>
+      </dx-data-grid>
+    </div>
+  </div>
+</div>

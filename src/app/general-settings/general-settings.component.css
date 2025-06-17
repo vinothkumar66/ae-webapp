@@ -1,3 +1,11 @@
 .custom-uploader {
     margin-top: 15px;
 }
+
+.sett {
+    text-align: end;
+}
+
+.grid-wrapper span, .dx-tabpanel, .grid-container {
+    margin-top: 20px
+}

@@ -1,0 +1,85 @@
+<div class="button-container">
+    <dx-button
+      text="Save"
+      type="success"
+      (onClick)="saveControl()">
+    </dx-button>
+  
+    <dx-button
+      text="Cancel"
+      (onClick)="cancelControl()">
+    </dx-button>
+  </div>
+  
+  <div class="form-grid">
+    <div class="form-row">
+      <label>Window Title</label>
+      <dx-text-box [(value)]="formData.windowTitle"></dx-text-box>
+    </div>
+  
+    <div class="form-row">
+      <label>Select Server</label>
+      <dx-select-box
+        [items]="formData.servers"
+        [value]="formData.selectServer"
+        displayExpr="name"
+        (onValueChanged)="onServerValueChanged($event)"
+        valueExpr="id">
+      </dx-select-box>
+    </div>
+
+    <div class="form-row">
+        <label>No Of Events At Startup</label>
+        <dx-number-box [(value)]="formData.eventsAtStartup"></dx-number-box>
+      </div>
+      
+      <div class="form-row">
+        <label>Max Events To Display</label>
+        <dx-number-box [(value)]="formData.maxEventsToDisplay"></dx-number-box>
+      </div>
+  
+    <div class="form-row">
+        <span>Add Conditions</span>
+          <dx-filter-builder
+            [(value)]="filterValue"
+            [fields]="filterFields"
+            [allowHierarchicalFields]="true"
+            [groupOperations]="['and', 'or']">
+          </dx-filter-builder>
+    </div>
+   
+    <div class="results form-row">
+        <b>Final Query</b>
+        <pre>{{ formData.fields }}</pre>
+     </div>
+  
+    <div class="form-row">
+        <span>Available Fields</span>
+        <dx-list [dataSource]="formData.displayFields" keyExpr="id" height="400">
+        <dxo-item-dragging
+            group="tasks"
+            [data]="displayFields"
+            [allowReordering]="true"
+            [onDragStart]="onDragStart"
+            [onAdd]="onAdd"
+            [onRemove]="onRemove"
+            [onReorder]="onReorder">
+        </dxo-item-dragging>
+        </dx-list>
+    </div>
+  
+    <div class="form-row">
+        <span>Selected Fields</span>
+        <dx-list [dataSource]="formData.defaultFields" keyExpr="id" height="400">
+        <dxo-item-dragging
+            group="tasks"
+            [data]="defaultFields"
+            [allowReordering]="true"
+            [onDragStart]="onDragStart"
+            [onAdd]="onAdd"
+            [onRemove]="onRemove"
+            [onReorder]="onReorder">
+        </dxo-item-dragging>
+        </dx-list>
+    </div>
+  </div>

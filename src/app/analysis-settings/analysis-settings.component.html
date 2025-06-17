@@ -3,35 +3,24 @@
 </div>
 
 <dx-tab-panel [(selectedIndex)]="selectedTabIndex" tabsPosition="right" [animationEnabled]="true"
-[deferRendering]="false">
-  <dxi-item [title]="'EEMUA Standard'">
+  [swipeEnabled]="true" [deferRendering]="false">
+  <dxi-item [title]="'EEUMA Standard'">
     <dx-data-grid
-      #eemuaStandardGrid
-      [dataSource]="eemuaStandardData"
+      #eeumaStandardGrid
+      [dataSource]="eeumaStandardData"
       [showBorders]="true"
       [rowAlternationEnabled]="true"
       [hoverStateEnabled]="true"
       [searchPanel]="{ visible: true, width: 240, placeholder: 'Search...' }"
       [editing]="{ mode: 'row', allowUpdating: true, allowAdding: false, allowDeleting: false }"
       [paging]="{ pageSize: 10 }"
-      (onToolbarPreparing)="onToolbarPreparing($event, 'eemuaStandard')"
+      (onToolbarPreparing)="onToolbarPreparing($event, 'eeumaStandard')"
+      (onRowUpdated)="updateData($event, 'eeumaStandard')"
     >
-      <dxi-column
-        dataField="metricname"
-        caption="Metric Name"
-        [allowEditing]="false"
-      ></dxi-column>
-
-      <dxi-column
-        dataField="value"
-        caption="Value"
-        [allowEditing]="true"
-        alignment="left"
-        width="200"
-      ></dxi-column>
+      <dxi-column dataField="metricname" caption="Metric Name" [allowEditing]="false"></dxi-column>
+      <dxi-column dataField="value" caption="Value" [allowEditing]="true" alignment="left" width="200"></dxi-column>
     </dx-data-grid>
   </dxi-item>
-
   
   <dxi-item [title]="'IEC Standard'">
     <dx-data-grid
@@ -44,89 +33,36 @@
       [editing]="{ mode: 'row', allowUpdating: true, allowAdding: false, allowDeleting: false }"
       [paging]="{ pageSize: 10 }"
       (onToolbarPreparing)="onToolbarPreparing($event, 'iecStandard')"
+      (onRowUpdated)="updateData($event, 'iecStandard')"
     >
-      <!-- Read-only 'metricname' shown first -->
-      <dxi-column
-        dataField="metricname"
-        caption="Metric Name"
-        [allowEditing]="false"
-      ></dxi-column>
-  
-      <!-- Editable 'value' shown second -->
-      <dxi-column
-        dataField="value"
-        caption="Value"
-        [allowEditing]="true"
-        alignment="left"
-        [width]="300"
-      ></dxi-column>
+      <dxi-column dataField="metricname" caption="Metric Name" [allowEditing]="false"></dxi-column>
+      <dxi-column dataField="value" caption="Value" [allowEditing]="true" alignment="left" [width]="300"></dxi-column>
     </dx-data-grid>
   </dxi-item>
   
-  <dxi-item [title]="'EEMUA Calculation'">
+  <dxi-item [title]="'EEUMA Calculation'">
     <dx-data-grid
-      #eemuaCalculationGrid
-      [dataSource]="eemuaCalculationData"
+      #eeumaCalculationGrid
+      [dataSource]="eeumaCalculationData"
       [showBorders]="true"
       [rowAlternationEnabled]="true"
       [hoverStateEnabled]="true"
       [searchPanel]="{ visible: true, width: 240, placeholder: 'Search...' }"
       [editing]="{ mode: 'row', allowUpdating: true, allowAdding: true, allowDeleting: true }"
       [paging]="{ pageSize: 5 }"
-      (onToolbarPreparing)="onToolbarPreparing($event, 'eemuaCalculation')"
+      (onToolbarPreparing)="onToolbarPreparing($event, 'eeumaCalculation')"
+      (onRowUpdated)="updateData($event, 'eeumaCalculation')"
+      (onRowInserted)="addData($event, 'eeumaCalculation')"
+      (onRowRemoved)="removeData($event, 'eeumaCalculation')"
     >
-      <!-- Editable 'performancecategory' -->
-      <dxi-column
-        dataField="performancecategory"
-        caption="Performance Category"
-        [allowEditing]="true"
-      ></dxi-column>
-  
-      <!-- Editable 'averagealarmper10mins' -->
-      <dxi-column
-        dataField="averagealarmper10mins"
-        caption="Average Alarm Per 10 Minutes"
-        [allowEditing]="true"
-        alignment="right"
-      ></dxi-column>
-  
-      <!-- Editable 'peakalarmper10mins' -->
-      <dxi-column
-        dataField="peakalarmper10mins"
-        caption="Peak Alarm Per 10 Minutes"
-        [allowEditing]="true"
-        alignment="right"
-      ></dxi-column>
-  
-      <!-- Editable 'percent10minsgreater5alarms' -->
-      <dxi-column
-        dataField="percent10minsgreater5alarms"
-        caption="Percent of 10 mins > 5 Alarms"
-        [allowEditing]="true"
-        alignment="right"
-      ></dxi-column>
-  
-      <!-- Editable 'color' with a color picker -->
-      <dxi-column
-        dataField="color"
-        caption="Color"
-        [allowEditing]="true"
-      >
-        <ng-template dxTemplate="editorCell" let-cellData let-column="column">
-          <dx-color-box
-            [(value)]="cellData.value"
-            [value]="cellData.value"
-          ></dx-color-box>
-        </ng-template>
-      </dxi-column>
-  
-      <!-- Editable 'eeumacalucationid' (hidden from display but editable) -->
-      <dxi-column
-        dataField="eeumacalucationid"
-        caption="EEUMA Calculation ID"
-        [allowEditing]="true"
-        [visible]="false"
-      ></dxi-column>
+      <dxi-column dataField="performancecategory" caption="Performance Category" [allowEditing]="true"></dxi-column>
+      <dxi-column dataField="averagealarmper10mins" caption="Average Alarm Per 10 Minutes" [allowEditing]="true" alignment="right"></dxi-column>
+      <dxi-column dataField="peakalarmper10mins" caption="Peak Alarm Per 10 Minutes" [allowEditing]="true" alignment="right"></dxi-column>
+      <dxi-column dataField="percent10minsgreater5alarms" caption="Percent of 10 mins > 5 Alarms" [allowEditing]="true" alignment="right"></dxi-column>
+      <dxi-column dataField="color" caption="Color" [allowEditing]="true" cellTemplate="colorCellTemplate" editCellTemplate="colorTemplate"></dxi-column>
+      <dxi-column dataField="eeumacalucationid" caption="EEUMA Calculation ID" [allowEditing]="true" [visible]="false"></dxi-column>
+      <div *dxTemplate="let cell of 'colorTemplate'"><dx-color-box [(value)]="cell.value" [value]="cell.value" (onValueChanged)="cell.setValue($event.value)"></dx-color-box></div>
+      <div *dxTemplate="let cell of 'colorCellTemplate'" [ngStyle]="{'background-color': cell.value, 'border-radius': '50%', width: '16px', height: '16px', display: 'inline-block', 'box-shadow': '0 0 2px #00000044'}"><span style="margin-left: 25px;">{{ cell.value }}</span></div>
     </dx-data-grid>
   </dxi-item>  
   
@@ -141,16 +77,17 @@
       [hoverStateEnabled]="true"
       [paging]="{ pageSize: 10 }"
       (onToolbarPreparing)="onToolbarPreparing($event, 'analysisSetting')"
+      (onRowUpdated)="updateData($event, 'analysisSetting')"
     >
-    <dxi-column dataField="chatteringmins" caption="Chattering Mins" [allowEditing]="true"></dxi-column>
-    <dxi-column dataField="chatteringcount" caption="Chattering Count" [allowEditing]="true"></dxi-column>
-    <dxi-column dataField="mostfrequent" caption="Most Frequent" [allowEditing]="true"></dxi-column>
-    <dxi-column dataField="floodmins" caption="Flood Mins" [allowEditing]="true"></dxi-column>
-    <dxi-column dataField="floodstartcount" caption="Flood Start Count" [allowEditing]="true"></dxi-column>
-    <dxi-column dataField="floodstopcount" caption="Flood Stop Count" [allowEditing]="true"></dxi-column>
-    <dxi-column dataField="afmcount" caption="AFM Count" [allowEditing]="true"></dxi-column>
-    <dxi-column dataField="daetcount" caption="DAET Count" [allowEditing]="true"></dxi-column>
-    <dxi-column dataField="staledays" caption="Stale Days" [allowEditing]="true"></dxi-column>
+      <dxi-column dataField="chatteringmins" caption="Chattering Mins" [allowEditing]="true"></dxi-column>
+      <dxi-column dataField="chatteringcount" caption="Chattering Count" [allowEditing]="true"></dxi-column>
+      <dxi-column dataField="mostfrequent" caption="Most Frequent" [allowEditing]="true"></dxi-column>
+      <dxi-column dataField="floodmins" caption="Flood Mins" [allowEditing]="true"></dxi-column>
+      <dxi-column dataField="floodstartcount" caption="Flood Start Count" [allowEditing]="true"></dxi-column>
+      <dxi-column dataField="floodstopcount" caption="Flood Stop Count" [allowEditing]="true"></dxi-column>
+      <dxi-column dataField="afmcount" caption="AFM Count" [allowEditing]="true"></dxi-column>
+      <dxi-column dataField="daetcount" caption="DAET Count" [allowEditing]="true"></dxi-column>
+      <dxi-column dataField="staledays" caption="Stale Days" [allowEditing]="true"></dxi-column>
     </dx-data-grid>
   </dxi-item>  
   
@@ -165,8 +102,10 @@
       [hoverStateEnabled]="true"
       [paging]="{ pageSize: 10 }"
       (onToolbarPreparing)="onToolbarPreparing($event, 'analysisDuration')"
+      (onRowUpdated)="updateData($event, 'analysisDuration')"
+      (onRowInserted)="addData($event, 'analysisDuration')"
+      (onRowRemoved)="removeData($event, 'analysisDuration')"
     >
-      <!-- Define columns using dxi-column for Analysis Duration -->
       <dxi-column dataField="analysistype" caption="Analysis Type"></dxi-column>
       <dxi-column dataField="durationinsecs" caption="Duration (Secs)" alignment="left"></dxi-column>
       <dxi-column dataField="alias" caption="Alias"></dxi-column>
@@ -184,18 +123,27 @@
       [hoverStateEnabled]="true"
       [paging]="{ pageSize: 10 }"
       (onToolbarPreparing)="onToolbarPreparing($event, 'priorityAttribute')"
+      (onRowUpdated)="updateData($event, 'priorityAttribute')"
+      (onRowInserted)="addData($event, 'priorityAttribute')"
+      (onRowRemoved)="removeData($event, 'priorityAttribute')"
     >
-      <!-- Define columns using dxi-column for Priority Attribute -->
       <dxi-column dataField="priorityname" caption="Priority Name"></dxi-column>
-      <dxi-column dataField="area" caption="Area"></dxi-column>
+      <dxi-column dataField="area" caption="Area" editCellTemplate="areaTemplate"></dxi-column>
       <dxi-column dataField="isastandard" caption="ISA Standard (%)"></dxi-column>
       <dxi-column dataField="iecstandard" caption="IEC Standard (%)"></dxi-column>
       <dxi-column dataField="dcssettings" caption="DCS Settings (%)"></dxi-column>
-      <dxi-column dataField="color" caption="Color" width="100">
-        <ng-template let-data="data">
-          <div [style.background-color]="data.color" class="color-box"></div>
-        </ng-template>
-      </dxi-column>
+      <dxi-column dataField="color" caption="Color" [allowEditing]="true" cellTemplate="colorCellTemplate" editCellTemplate="colorTemplate"></dxi-column>
+      <div *dxTemplate="let cell of 'colorTemplate'">
+        <dx-color-box [(value)]="cell.value" [value]="cell.value" (onValueChanged)="cell.setValue($event.value)"></dx-color-box>
+      </div>
+      <div *dxTemplate="let cell of 'colorCellTemplate'" [ngStyle]="{'background-color': cell.value, 'border-radius': '50%', width: '16px', height: '16px', display: 'inline-block', 'box-shadow': '0 0 2px #00000044'}">
+        <span style="margin-left: 25px;">
+          {{ cell.value }}
+        </span>
+      </div>
+      <div *dxTemplate="let cell of 'areaTemplate'">
+        <dx-select-box [dataSource]="priorityAttributeColumnValue" displayExpr="area" valueExpr="area" [value]="cell.value" (onValueChanged)="cell.setValue($event.value)" ></dx-select-box>
+      </div>     
     </dx-data-grid>
   </dxi-item>
   
@@ -211,81 +159,190 @@
       [hoverStateEnabled]="true"
       [paging]="{ pageSize: 10 }"
       (onToolbarPreparing)="onToolbarPreparing($event, 'areaOperators')"
+      (onRowUpdated)="updateData($event, 'areaOperators')"
     >
-      <!-- Define columns using dxi-column for Area Operators -->
-      <dxi-column dataField="area" caption="Area"></dxi-column>
+      <dxi-column dataField="area" caption="Area"  [allowEditing]="false"></dxi-column>
       <dxi-column dataField="operartors" caption="Operators" alignment="left" width="300"></dxi-column>
     </dx-data-grid>
   </dxi-item>
   
-  
   <dxi-item [title]="'Performance Rating'">
     <div class="grid-wrapper">
-  
-      <!-- Operator Load in Normal Operation -->
       <div class="grid-container">
         <span>Operator Load in Normal Operation</span>
-      <dx-data-grid
-        [dataSource]="normalOperationData"
-        [columns]="[
-          { dataField: 'rating', caption: 'Rating', sortOrder: 'asc', },
-          { dataField: 'noofdaysfrom', caption: 'Days From' },
-          { dataField: 'noofdaysto', caption: 'Days To' }
-        ]"
-        [searchPanel]="{ visible: true }"
-        [editing]="{ mode: 'row', allowUpdating: true, allowAdding: false, allowDeleting: false }"
-        [showBorders]="true"
-        [rowAlternationEnabled]="true"
-        [hoverStateEnabled]="true"
-        [paging]="{ pageSize: 10 }"
-      ></dx-data-grid>
+        <dx-data-grid
+          [dataSource]="normalOperationData"
+          [columns]="[
+            { dataField: 'rating', caption: 'Rating', sortOrder: 'asc', allowEditing: false },
+            { dataField: 'noofdaysfrom', caption: 'Days From' },
+            { dataField: 'noofdaysto', caption: 'Days To' },
+          ]"
+          [searchPanel]="{ visible: true }"
+          [editing]="{ mode: 'row', allowUpdating: true, allowAdding: false, allowDeleting: false }"
+          [showBorders]="true"
+          [rowAlternationEnabled]="true"
+          [hoverStateEnabled]="true"
+          [paging]="{ pageSize: 10 }"
+          (onRowUpdated)="updateData($event, 'performancerating')"
+        >
+        <dxo-toolbar>
+          <dxi-item location="after">
+            <div *dxTemplate>
+              <span>Target <</span>
+            </div>
+          </dxi-item>
+        
+          <dxi-item location="after">
+            <div *dxTemplate>
+              <ng-container *ngIf="isEditing; else displayValue">
+                <dx-number-box 
+                  [(value)]="editableValue"
+                  [min]="0"
+                  [width]="60"
+                  [height]="30"
+                ></dx-number-box>
+              </ng-container>
+              <ng-template #displayValue>
+                <span>{{ NormalTargetValues }}</span>
+              </ng-template>
+            </div>
+          </dxi-item>
+        
+          <dxi-item location="after">
+            <div *dxTemplate>
+              <span>alarms/day</span>
+            </div>
+          </dxi-item>
+        
+          <dxi-item location="after" *ngIf="!isEditing">
+            <div *dxTemplate>
+              <i 
+                class="dx-icon-edit"
+                style="cursor: pointer; margin-left: 10px; color: var(--dx-color-primary); font-size: 18px;"
+                (click)="enterEditMode()"
+              ></i>
+            </div>
+          </dxi-item>
+        
+          <dxi-item location="after" *ngIf="isEditing">
+            <div *dxTemplate>
+              <i 
+                class="dx-icon-save"
+                style="cursor: pointer; margin-left: 10px; color: var(--dx-color-success); font-size: 18px;"
+                (click)="saveValue()"
+              ></i>
+            </div>
+          </dxi-item>
+        </dxo-toolbar>
+        
+        </dx-data-grid>
       </div>
   
-      <!-- Operator Load in Upset Operation -->
       <div class="grid-container">
         <span>Operator Load in Upset Operation</span>
-      <dx-data-grid
-        [dataSource]="upsetOperationData"
-        [columns]="[
-          { dataField: 'rating', caption: 'Rating', sortOrder: 'asc', },
-          { dataField: 'noofhoursfrom', caption: 'Hours From' },
-          { dataField: 'noofhoursto', caption: 'Hours To' }
-        ]"
-        [searchPanel]="{ visible: true }"
-        [editing]="{ mode: 'row', allowUpdating: true, allowAdding: false, allowDeleting: false }"
-        [showBorders]="true"
-        [rowAlternationEnabled]="true"
-        [hoverStateEnabled]="true"
-        [paging]="{ pageSize: 10 }"
-      ></dx-data-grid>
+        <dx-data-grid
+          [dataSource]="upsetOperationData"
+          [columns]="[
+            { dataField: 'rating', caption: 'Rating', sortOrder: 'asc', allowEditing: false },
+            { dataField: 'noofhoursfrom', caption: 'Hours From' },
+            { dataField: 'noofhoursto', caption: 'Hours To' }
+          ]"
+          [searchPanel]="{ visible: true }"
+          [editing]="{ mode: 'row', allowUpdating: true, allowAdding: false, allowDeleting: false }"
+          [showBorders]="true"
+          [rowAlternationEnabled]="true"
+          [hoverStateEnabled]="true"
+          [paging]="{ pageSize: 10 }"
+          (onRowUpdated)="updateData($event, 'performancerating')"
+        >
+          <dxo-toolbar>
+            <dxi-item location="after">
+              <div *dxTemplate><span>Target <</span></div>
+            </dxi-item>
+          
+            <dxi-item location="after">
+              <div *dxTemplate>
+                <ng-container *ngIf="isEditingUpset; else displayUpset">
+                  <dx-number-box [(value)]="editableUpset" [min]="0" [width]="60" [height]="30"></dx-number-box>
+                </ng-container>
+                <ng-template #displayUpset><span>{{ UpsetTargetValues }}</span></ng-template>
+              </div>
+            </dxi-item>
+          
+            <dxi-item location="after">
+              <div *dxTemplate><span>hours/month</span></div>
+            </dxi-item>
+          
+            <dxi-item location="after" *ngIf="!isEditingUpset">
+              <div *dxTemplate>
+                <i class="dx-icon-edit" style="cursor: pointer; color: var(--dx-color-primary); margin-left: 10px; font-size: 18px;" (click)="editUpset()"></i>
+              </div>
+            </dxi-item>
+          
+            <dxi-item location="after" *ngIf="isEditingUpset">
+              <div *dxTemplate>
+                <i class="dx-icon-save" style="cursor: pointer; color: var(--dx-color-success); margin-left: 10px; font-size: 18px;" (click)="saveUpset()"></i>
+              </div>
+            </dxi-item>
+          </dxo-toolbar>
+        </dx-data-grid>
       </div>
   
-      <!-- Operating in Alarm State - Stale Alarm -->
       <div class="grid-container">
         <span>Operating in Alarm State - Stale Alarm</span>
-      <dx-data-grid
-        [dataSource]="alarmStateData"
-        [columns]="[
-          { dataField: 'rating', caption: 'Rating', sortOrder: 'asc', },
-          { dataField: 'percentagefrom', caption: 'Percentage From' },
-          { dataField: 'percentageto', caption: 'Percentage To' }
-        ]"
-        [searchPanel]="{ visible: true }"
-        [editing]="{ mode: 'row', allowUpdating: true, allowAdding: false, allowDeleting: false }"
-        [showBorders]="true"
-        [rowAlternationEnabled]="true"
-        [hoverStateEnabled]="true"
-        [paging]="{ pageSize: 10 }"
-      ></dx-data-grid>
+        <dx-data-grid
+          [dataSource]="alarmStateData"
+          [columns]="[
+            { dataField: 'rating', caption: 'Rating', sortOrder: 'asc', allowEditing: false },
+            { dataField: 'percentagefrom', caption: 'Percentage From' },
+            { dataField: 'percentageto', caption: 'Percentage To' }
+          ]"
+          [searchPanel]="{ visible: true }"
+          [editing]="{ mode: 'row', allowUpdating: true, allowAdding: false, allowDeleting: false }"
+          [showBorders]="true"
+          [rowAlternationEnabled]="true"
+          [hoverStateEnabled]="true"
+          [paging]="{ pageSize: 10 }"
+          (onRowUpdated)="updateData($event, 'performancerating')"
+        >
+          <dxo-toolbar>
+            <dxi-item location="after">
+              <div *dxTemplate><span>Target <</span></div>
+            </dxi-item>
+          
+            <dxi-item location="after">
+              <div *dxTemplate>
+                <ng-container *ngIf="isEditingAlarm; else displayAlarm">
+                  <dx-number-box [(value)]="editableAlarm" [min]="0" [width]="60" [height]="30"></dx-number-box>
+                </ng-container>
+                <ng-template #displayAlarm><span>{{ StaleAlarmTargetValues }}</span></ng-template>
+              </div>
+            </dxi-item>
+          
+            <dxi-item location="after">
+              <div *dxTemplate><span>% any day</span></div>
+            </dxi-item>
+          
+            <dxi-item location="after" *ngIf="!isEditingAlarm">
+              <div *dxTemplate>
+                <i class="dx-icon-edit" style="cursor: pointer; color: var(--dx-color-primary); margin-left: 10px; font-size: 18px;" (click)="editAlarm()"></i>
+              </div>
+            </dxi-item>
+          
+            <dxi-item location="after" *ngIf="isEditingAlarm">
+              <div *dxTemplate>
+                <i class="dx-icon-save" style="cursor: pointer; color: var(--dx-color-success); margin-left: 10px; font-size: 18px;" (click)="saveAlarm()"></i>
+              </div>
+            </dxi-item>
+          </dxo-toolbar>
+        </dx-data-grid>
       </div>
     </div>
   </dxi-item>
   
   <dxi-item [title]="'Performance Dashboard'">
-    <!-- Container for both grids -->
     <div class="performance-dashboard-container">
       
-      <!-- AFM Grid -->
       <div class="grid-container">
         <span>AFM Performance Dashboard</span>
         <dx-data-grid
@@ -297,6 +354,7 @@
           [hoverStateEnabled]="true"
           [paging]="{ pageSize: 10 }"
           (onToolbarPreparing)="onToolbarPreparing($event, 'AFM')"
+          (onRowUpdated)="updateData($event, 'performancedashboard')"
         >
         <dxi-column
           dataField="metricname"
@@ -314,7 +372,6 @@
         </dx-data-grid>
       </div>
   
-      <!-- DAET Grid -->
       <div class="grid-container">
         <span>DAET Performance Dashboard</span>
         <dx-data-grid
@@ -326,6 +383,7 @@
           [hoverStateEnabled]="true"
           [paging]="{ pageSize: 10 }"
           (onToolbarPreparing)="onToolbarPreparing($event, 'DAET')"
+          (onRowUpdated)="updateData($event, 'performancedashboard')"
         >
         <dxi-column
           dataField="metricname"
@@ -342,7 +400,6 @@
         ></dxi-column>
         </dx-data-grid>
       </div>
-      
     </div>
   </dxi-item>
   </dx-tab-panel>

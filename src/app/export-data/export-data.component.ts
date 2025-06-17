@@ -3,7 +3,11 @@ import { CommonModule, formatDate } from '@angular/common';
 import { DxFormModule, DxFilterBuilderModule, DxListModule, DxButtonModule, DxDataGridModule, DxFormComponent } from 'devextreme-angular';
 import { ApiService } from '../services/api.service';
 import { DxSortableTypes } from 'devextreme-angular/ui/sortable';
-
+import { Workbook } from 'exceljs';
+import FileSaver from 'file-saver';
+import { exportDataGrid } from 'devextreme/excel_exporter';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 type DxoItemDraggingProperties = DxSortableTypes.Properties;
 
 @Component({
@@ -29,17 +33,17 @@ export class ExportDataComponent implements OnInit {
     fileName: '',
     fromDate: null,
     toDate: null,
-    server: 0,
+    server: null,
     fields: 'null'
   };
-
+  filterFields: any[] = [];
+  fieldLookupValues: { [key: string]: string[] } = {};
+  storedFieldConfigs: any[] = [];
   servers: { id: number; name: string }[] = [];
   displayFields: string[] = [];
   defaultFields: string[] = [];
   conditionFields: string[] = [];
   exportedData: any = [];
-
-  filterFields: any[] = [];
 
   private _filterValue: any = null;
   get filterValue(): any {
@@ -61,7 +65,7 @@ export class ExportDataComponent implements OnInit {
   validateToDate = (e: any) => {
     const from = this.exportFormData.fromDate;
     const to = e.value;
-    return !from || !to || new Date(to) > new Date(from);
+    return !from || !to || new Date(to) >= new Date(from);
   };
 
   validateConditions = (e: any) => {
@@ -105,16 +109,15 @@ export class ExportDataComponent implements OnInit {
           );
   
           this.conditionFields = conditionString.split(',').map((field: string) => field.trim());
-  
-          this.filterFields = this.conditionFields.map((field: string) => ({
+
+          this.storedFieldConfigs =  this.conditionFields.map((field: any) => ({
             dataField: field,
             dataType: 'string',
-            lookup: {
-              dataSource: ['104LINE3'],
-              valueExpr: '',
-              displayExpr: ''
-            }
+            filterOperations: ['=', '<>', 'contains']
           }));
+
+          // Optionally assign basic fields without lookups to display immediately
+          this.filterFields = [...this.storedFieldConfigs];
         } catch (e) {
           console.error('Field parsing error:', e);
         }
@@ -123,7 +126,42 @@ export class ExportDataComponent implements OnInit {
         console.error('API error:', err);
       }
     });
+  } 
+  
+  loadFieldLookups(){
+    this.storedFieldConfigs.forEach((fieldConfig: any) => {
+      const fieldName = fieldConfig.dataField;
+
+      this.apiService.GetColumnValues(fieldName, this.exportFormData.server).subscribe({
+        next: (dataFromApi: any) => {
+          try {
+            const parsedData = JSON.parse(dataFromApi);
+            this.fieldLookupValues[fieldName] = parsedData;
+
+            const displayKey = parsedData.length > 0 ? Object.keys(parsedData[0])[0] : '';
+
+            fieldConfig.lookup = {
+              dataSource: parsedData,
+              valueExpr: displayKey,
+              displayExpr: displayKey,
+              allowClearing: true
+            };
+
+            this.filterFields = [...this.storedFieldConfigs];
+
+          } catch (parseError) {
+          }
+        },
+        error: (err) => {
+          console.error(`Failed to fetch column values for '${fieldName}':`, err);
+        }
+      });
+    });
   }
+  onServerValueChanged = (e: any) => {
+    this.filterValue = [];
+    this.loadFieldLookups();
+  };
 
   onDragStart: DxoItemDraggingProperties['onDragStart'] = (e) => {
     e.itemData = e.fromData[e.fromIndex];
@@ -141,38 +179,6 @@ export class ExportDataComponent implements OnInit {
     this.onRemove(e as DxSortableTypes.RemoveEvent);
     this.onAdd(e as DxSortableTypes.AddEvent);
   };
-
-  onEditorPreparing(e: any) {
-    console.log('Editor preparing for field:', e.dataField); 
-    if (e.dataField && e.editorOptions && e.lookup) {
-      const fieldName = e.dataField;
-  
-      this.apiService.GetColumnValues(fieldName, this.exportFormData.server).subscribe({
-        next: (dataFromApi: any) => {
-          try {
-            const parsedData = JSON.parse(dataFromApi);
-  
-            if (!parsedData.length) return;
-  
-            const firstKey = Object.keys(parsedData[0])[0];
-  
-            e.editorOptions.dataSource = parsedData;
-            e.editorOptions.valueExpr = firstKey;
-            e.editorOptions.displayExpr = firstKey;
-
-            if (e.editorOptions.updateDataSource) {
-              e.editorOptions.updateDataSource();
-            }
-          } catch (error) {
-            console.error(`Error parsing values for ${fieldName}:`, error);
-          }
-        },
-        error: (err) => {
-          console.error('API error:', err);
-        }
-      });
-    }
-  }
 
   onFilterValueChanged(value: any) {
     this.exportFormData.fields = JSON.stringify(value);
@@ -231,7 +237,21 @@ export class ExportDataComponent implements OnInit {
   onBack(){
     this.showGrid = false;
   }
+
+  onExporting(e: any) {
+    const workbook = new Workbook();
+    const worksheet = workbook.addWorksheet('Main sheet');
+  
+    exportDataGrid({
+      component: e.component,
+      worksheet: worksheet,
+      autoFilterEnabled: true,
+    }).then(() => {
+      workbook.xlsx.writeBuffer().then((buffer: ArrayBuffer) => {
+        FileSaver.saveAs(new Blob([buffer], { type: 'application/octet-stream' }), this.exportFormData.fileName + '.xlsx');
+      });
+    });
+  
+    e.cancel = true;
+  }
 }
-
-
-

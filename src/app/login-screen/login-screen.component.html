@@ -1,0 +1,23 @@
+<!-- Background Image -->
+<div class="background-image"></div>
+
+<!-- Top Left Logo + Name -->
+<div class="top-left-logo">
+  <img src="https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/react.svg" alt="Logo" />
+  <span>MyApp</span>
+</div>
+
+<!-- Top Right Login/Back Button -->
+<button class="top-right-btn" (click)="toggleLogin()">
+  {{ loginVisible ? 'Back' : 'Login' }}
+</button>
+
+<!-- Login Form -->
+<div class="login-form-overlay" [class.show]="loginVisible">
+  <div class="login-box">
+    <h2>Login</h2>
+    <input type="text" placeholder="Username" />
+    <input type="password" placeholder="Password" />
+    <button>Submit</button>
+  </div>
+</div>

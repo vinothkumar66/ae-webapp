@@ -3,69 +3,80 @@
   
     <div class="content">
         <aside class="sidebar">
-            <ul class="sidebar-links">
-                <li (click)="navigateTo('home')"
-                [ngClass]="{ active: currentRoute === '/home' }"
-                >
-                <span class="dx-icon dx-icon-dataarea"></span> 
-                <span class="link-text">Dashboard</span>
-                </li>
+           <ul class="sidebar-links">
                 <li (click)="navigateTo('analytic')"
-                [ngClass]="{ active: currentRoute === '/analytic' }"
-                >
-                <span class="dx-icon dx-icon-datatrending"></span> 
-                <span class="link-text">Analytics Viewer</span>
+                    [ngClass]="{ active: currentRoute === '/analytic' }"
+                    title="Analytics Viewer">
+                    <span class="dx-icon dx-icon-datatrending"></span> 
+                    <span class="link-text">Analytics Viewer</span>
                 </li>
                 <li (click)="navigateTo('realtime')"
-                [ngClass]="{ active: currentRoute === '/realtime' }"
-                >
-                <span class="dx-icon dx-icon-datausage"></span> 
-                <span class="link-text">Realtime Viewer</span>
+                    [ngClass]="{ active: currentRoute === '/realtime' }"
+                    title="Realtime Viewer">
+                    <span class="dx-icon dx-icon-datausage"></span> 
+                    <span class="link-text">Realtime Viewer</span>
                 </li>
                 <li (click)="navigateTo('export')"
-                [ngClass]="{ active: currentRoute === '/export' }"
-                >
-                <span class="dx-icon dx-icon-export"></span> 
-                <span class="link-text">Export Data</span>
+                    [ngClass]="{ active: currentRoute === '/export' }"
+                    title="Export Data">
+                    <span class="dx-icon dx-icon-export"></span> 
+                    <span class="link-text">Export Data</span>
                 </li>
                 <li (click)="navigateTo('reports')"
-                [ngClass]="{ active: currentRoute === '/reports' }"
-                >
-                <span class="dx-icon dx-icon-doc"></span> 
-                <span class="link-text">Reports Viewer</span>
+                    [ngClass]="{ active: currentRoute === '/reports' }"
+                    title="Reports Viewer">
+                    <span class="dx-icon dx-icon-doc"></span> 
+                    <span class="link-text">Reports Viewer</span>
                 </li>
                 <li (click)="navigateTo('pages')"
-                [ngClass]="{ active: currentRoute === '/pages' }"
-                >
-                <span class="dx-icon dx-icon-activefolder"></span>
-                <span class="link-text">Page Viewer</span>
+                    [ngClass]="{ active: currentRoute === '/pages' }"
+                    title="Page Viewer">
+                    <span class="dx-icon dx-icon-activefolder"></span>
+                    <span class="link-text">Page Viewer</span>
                 </li>
                 <li (click)="navigateTo('quickaccess')"
-                [ngClass]="{ active: currentRoute === '/quickaccess' }"
-                >
-                <span class="dx-icon dx-icon-fieldchooser"></span> 
-                <span class="link-text">Quick Access</span>
+                    [ngClass]="{ active: currentRoute === '/quickaccess' }"
+                    title="Quick Access">
+                    <span class="dx-icon dx-icon-fieldchooser"></span> 
+                    <span class="link-text">Quick Access</span>
                 </li>
                 <li (click)="navigateTo('hierarchy')"
-                [ngClass]="{ active: currentRoute === '/hierarchy' }"
-                >
-                <span class="dx-icon dx-icon-hierarchy"></span>
-                <span class="link-text">By Hierarchy</span>
+                    [ngClass]="{ active: currentRoute === '/hierarchy' }"
+                    title="By Hierarchy">
+                    <span class="dx-icon dx-icon-hierarchy"></span>
+                    <span class="link-text">By Hierarchy</span>
                 </li>
                 <li (click)="navigateTo('analysis-settings')"
-                [ngClass]="{ active: currentRoute === '/analysis-settings' }">
-                <span class="dx-icon dx-icon-optionsgear"></span> 
-                <span class="link-text">Analysis Settings</span>
+                    [ngClass]="{ active: currentRoute === '/analysis-settings' }"
+                    title="Analysis Settings">
+                    <span class="dx-icon dx-icon-optionsgear"></span> 
+                    <span class="link-text">Analysis Settings</span>
                 </li>
                 <li (click)="navigateTo('general-settings')"
-                [ngClass]="{ active: currentRoute === '/general-settings' }">
-                <span class="dx-icon dx-icon-preferences"></span> 
-                <span class="link-text">General Settings</span>
+                    [ngClass]="{ active: currentRoute === '/general-settings' }"
+                    title="General Settings">
+                    <span class="dx-icon dx-icon-preferences"></span> 
+                    <span class="link-text">General Settings</span>
                 </li>
                 <li (click)="navigateTo('login')"
-                [ngClass]="{ active: currentRoute === '/login' }">
-                <span class="dx-icon dx-icon-runner"></span> 
-                <span class="link-text">Logout</span>
+                    [ngClass]="{ active: currentRoute === '/login' }"
+                    title="Logout">
+                    <span class="dx-icon dx-icon-runner"></span> 
+                    <span class="link-text">Logout</span>
+                </li>
+
+                <li (click)="navigateTo('realtime-resize')"
+                    [ngClass]="{ active: currentRoute === '/realtime-resize' }"
+                    title="Resize">
+                    <span class="dx-icon dx-icon-dragvertical"></span> 
+                    <span class="link-text">Resizable component</span>
+                </li>
+
+                 <li (click)="navigateTo('analytic-new')"
+                    [ngClass]="{ active: currentRoute === '/analytic-new' }"
+                    title="Resize">
+                    <span class="dx-icon dx-icon-tips"></span> 
+                    <span class="link-text">analytic new</span>
                 </li>
             </ul>
         </aside>

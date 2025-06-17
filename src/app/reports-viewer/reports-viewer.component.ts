@@ -24,10 +24,15 @@ export class ReportsViewerComponent {
 
   constructor(private apiService: ApiService) {}
 
+  ngOnInit() {
+    this.getAIMSHierarchyPages();
+  }
+
   getAIMSHierarchyPages() {
     this.apiService.getAllReports().subscribe({
       next: (dataFromApi: any) => {
         this.dataList = JSON.parse(dataFromApi);
+        console.log(this.dataList)
       },
       error: (err) => {
         console.error('API error:', err);
@@ -35,24 +40,5 @@ export class ReportsViewerComponent {
     });
   }
 
-  folderItems = [
-    {
-      id: 1,
-      text: 'Folder 1',
-      items: [
-        { id: 2, text: 'Subfolder 1' },
-        { id: 3, text: 'Subfolder 2' }
-      ]
-    },
-    {
-      id: 4,
-      text: 'Folder 2',
-      items: [
-        { id: 5, text: 'Subfolder 3' }
-      ]
-    }
-  ];
-
-  // List of items for the List tab
   listItems = ['Item 1', 'Item 2', 'Item 3', 'Item 4'];
 }

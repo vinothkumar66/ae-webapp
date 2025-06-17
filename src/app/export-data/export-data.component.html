@@ -4,7 +4,7 @@
   <dx-button 
     text="Export"
     icon="export"
-    stylingMode="text"
+    type="default"
     (onClick)="onExport()"
     *ngIf="!showGrid">
   </dx-button>
@@ -12,7 +12,7 @@
   <dx-button 
     text="Back to Settings"
     icon="back"
-    stylingMode="text"
+    type="default"
     *ngIf="showGrid"
     (onClick)="onBack()">
   </dx-button>
@@ -21,7 +21,7 @@
 <dx-form
   *ngIf="!showGrid"
   [formData]="exportFormData"
-  [colCount]="2"
+  [colCount]="4"
   labelLocation="top"
   #exportForm>
   <dxi-item 
@@ -64,32 +64,26 @@
     label="Select Server"
     [editorOptions]="{
       items: servers,
-      value: servers && servers.length > 0 ? servers[0].id : null,
       displayExpr: 'name',
-      valueExpr: 'id'
+      valueExpr: 'id',
+      onValueChanged: onServerValueChanged
     }">
     <dxi-validation-rule type="required" message="Server selection is required"></dxi-validation-rule>
   </dxi-item>
 
-  <dxi-item itemType="simple" [colSpan]="1">
+  <dxi-item itemType="simple" [colSpan]="2">
     <ng-template dxTemplate="content">
       <span>Add Conditions</span>
       <dx-filter-builder
         [(value)]="filterValue"
         [fields]="filterFields"
         [allowHierarchicalFields]="true"
-        [groupOperations]="['and', 'or']"
-        (onEditorPreparing)="onEditorPreparing($event)">
+        [groupOperations]="['and', 'or']">
       </dx-filter-builder>
     </ng-template>
-    <dxi-validation-rule
-    type="custom"
-    [validationCallback]="validateConditions"
-    message="At least one condition must be added"
-  ></dxi-validation-rule>
   </dxi-item>
 
-  <dxi-item [colSpan]="1">
+  <dxi-item [colSpan]="2">
     <ng-template dxTemplate="template" let-data="data">
       <div class="results">
         <b>Final Query</b>
@@ -98,7 +92,7 @@
     </ng-template>
   </dxi-item>
 
-  <dxi-item itemType="simple" [colSpan]="1">
+  <dxi-item itemType="simple" [colSpan]="2">
     <ng-template dxTemplate="content">
       <span>Available Fields</span>
       <dx-list [dataSource]="displayFields" keyExpr="id" height="400">
@@ -115,7 +109,7 @@
     </ng-template>
   </dxi-item>
 
-  <dxi-item itemType="simple" [colSpan]="1">
+  <dxi-item itemType="simple" [colSpan]="2">
     <ng-template dxTemplate="content">
       <span>Selected Fields</span>
       <dx-list [dataSource]="defaultFields" keyExpr="id" height="400">
@@ -144,13 +138,18 @@
     [paging]="{ pageSize: 10 }"
     [pager]="{
       showPageSizeSelector: true,
-      allowedPageSizes: [10, 20, 50],
-      showInfo: true
+      allowedPageSizes: [10, 20, 50, 'all'],
+      showInfo: true,
+      visible: true  
+    }"
+    [scrolling]="{
+      rowRenderingMode: 'virtual',
     }"
     [export]="{
       enabled: true,
-      allowExportSelectedData: true
+      formats: ['xlsx', 'csv']
     }"
+     (onExporting)="onExporting($event)"
     >
-</dx-data-grid>
+  </dx-data-grid>
 </div>

@@ -16,7 +16,7 @@
 }
 
 .sidebar {
-  width: 240px;
+  width: 60px;
   background-color: var(--dx-component-color-bg);
   color: var(--dx-color-text);
   border: 1px solid var(--dx-color-separator);
@@ -27,7 +27,7 @@
 }
 
 .sidebar.collapsed {
-  width: 60px;
+  width: 240px;
 }
 
 .sidebar-links {
@@ -71,13 +71,14 @@
 }
 
 .maincontent{
-  margin-left: 240px;
+  margin-left: 60px;
   padding: 20px;
   transition: margin-left 0.3s ease;
+  background-color: var(--dx-component-color-bg);
 }
 
 .maincontent.collapsed {
-  margin-left: 60px;
+  margin-left: 240px;
 }
 
 .footer-toolbar {

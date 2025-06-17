@@ -1,0 +1,159 @@
+<div class="button-container">
+  <dx-button
+    text="Save"
+    type="success"
+    (onClick)="saveControl()">
+  </dx-button>
+
+  <dx-button
+    text="Cancel"
+    (onClick)="cancelControl()">
+  </dx-button>
+</div>
+
+<div class="form-grid">
+  <div class="form-row">
+    <label>Analytic Title</label>
+    <dx-text-box [(value)]="formData.analyticTitle"></dx-text-box>
+  </div>
+
+  <div class="form-row">
+      <label>Show Datatable/Chart</label>
+      <dx-tag-box
+          [items]="['Chart', 'Datatable']"
+          [(value)]="formData.showControl"
+          [showSelectionControls]="true"
+          multiselect="true">
+      </dx-tag-box>
+  </div>
+
+  <div class="form-row">
+      <label>Analytic Type</label>
+      <br>
+      <dx-drop-down-button
+        #dropDownButton
+        [text]="dropdownText" 
+      >
+        <dx-menu *dxTemplate="let data of 'content'" [items]="menuItems" orientation="vertical"></dx-menu>
+      </dx-drop-down-button>
+  </div>
+  
+  <div class="form-row">
+      <label>Chart Type</label>
+      <dx-select-box
+      [items]="chartTypes"
+      [(value)]="formData.chartType">
+    </dx-select-box>
+  </div>
+
+  <div class="form-row">
+    <label>Select Server</label>
+    <dx-select-box
+      [items]="formData.servers"
+      [value]="formData.selectServer"
+      displayExpr="name"
+      (onValueChanged)="onServerValueChanged($event)"
+      valueExpr="id">
+    </dx-select-box>
+  </div>
+
+  <div class="form-row">
+    <label>Query Type</label>
+    <dx-select-box
+      [items]="queryTypes"
+      [(value)]="formData.queryType">
+    </dx-select-box>
+  </div>
+
+  <div class="form-row" [ngClass]="{ 'hidden': formData.queryType !== 'LastNN' }">
+    <label>Last N Value</label>
+    <dx-number-box [(value)]="formData.lastNValue"></dx-number-box>
+  </div>
+
+  <div class="form-row" [ngClass]="{ 'hidden': formData.queryType !== 'LastNN' }">
+    <label>Relative Time / Auto Update</label>
+    <dx-tag-box 
+      [items]="['Relative Time', 'Auto Update']"
+      [(value)]="formData.relativeTime"
+      [showSelectionControls]="true"
+      multiselect="true">
+    </dx-tag-box>
+  </div>
+
+  <div class="form-row"  [ngClass]="{ 'hidden': formData.queryType !== 'LastNN' || !formData.relativeTime.includes('Relative Time') }">
+      <label>Auto Update (Update Rate in Mins)</label>
+      <dx-number-box [(value)]="formData.autoUpdate"></dx-number-box>
+    </div>
+    
+    <div class="form-row"  [ngClass]="{ 'hidden': formData.queryType !== 'LastNN' || !formData.relativeTime.includes('Auto Update') }">
+      <label>Time Picker</label>
+      <dx-date-box
+        type="time"
+        [(value)]="formData.timePicker"
+        displayFormat="HH:mm">
+      </dx-date-box>
+    </div>
+
+  <div class="form-row" [ngClass]="{ 'hidden': formData.queryType !== 'Range' }">
+    <label>From Date</label>
+    <dx-date-box
+      type="datetime"
+      [(value)]="formData.fromDate"
+      displayFormat="dd-MMM-yyyy HH:mm:00">
+    </dx-date-box>
+  </div>
+
+  <div class="form-row" [ngClass]="{ 'hidden': formData.queryType !== 'Range' }">
+    <label>To Date</label>
+    <dx-date-box
+      type="datetime"
+      [(value)]="formData.toDate"
+      displayFormat="dd-MMM-yyyy HH:mm:00">
+    </dx-date-box>
+  </div>
+
+  <div class="form-row">
+      <span>Add Conditions</span>
+        <dx-filter-builder
+          [(value)]="filterValue"
+          [fields]="filterFields"
+          [allowHierarchicalFields]="true"
+          [groupOperations]="['and', 'or']">
+        </dx-filter-builder>
+  </div>
+
+  <div class="results form-row">
+      <b>Final Query</b>
+      <pre>{{ formData.fields }}</pre>
+   </div>
+
+  <div class="form-row">
+    <span>Available Fields</span>
+    <dx-list [dataSource]="this.formData.displayFields" keyExpr="id" height="400">
+        <dxo-item-dragging
+        group="tasks"
+        [data]="displayFields"
+        [allowReordering]="true"
+        [onDragStart]="onDragStart"
+        [onAdd]="onAdd"
+        [onRemove]="onRemove"
+        [onReorder]="onReorder">
+        </dxo-item-dragging>
+    </dx-list>
+  </div>
+
+  <div class="form-row">
+    <span>Selected Fields</span>
+    <dx-list [dataSource]="this.formData.defaultFields" keyExpr="id" height="400">
+        <dxo-item-dragging
+        group="tasks"
+        [data]="defaultFields"
+        [allowReordering]="true"
+        [onDragStart]="onDragStart"
+        [onAdd]="onAdd"
+        [onRemove]="onRemove"
+        [onReorder]="onReorder">
+        </dxo-item-dragging>
+    </dx-list>
+  </div>
+</div>

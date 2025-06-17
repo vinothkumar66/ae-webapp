@@ -7,6 +7,45 @@ body {
     margin: 0 !important;
 }
 
-.dx-multiview-item {
+.dx-multiview-item, .dx-menu .dx-menu-item .dx-menu-item-content {
     padding: 10px;
 }
+
+.dx-popup-wrapper > .dx-overlay-content {
+    width: auto !important;
+}
+
+.dx-menu-base .dx-menu-items-container {
+    height: auto !important;
+    overflow: auto;
+}
+
+.dx-button-has-text .dx-button-content .dx-button-text {
+    white-space: pre-wrap !important;
+    text-align: left;
+}
+
+.dx-header-row .center-header {
+    text-align: center !important;
+}
+
+.center-header {
+    white-space: pre-wrap;
+}
+
+.dx-header-row .table-hidden {
+    display: none;
+}
+
+/* .dx-button-mode-outlined.dx-buttongroup-last-item.dx-button{
+    height: 50px;
+    width: 600px;
+} */
+
+.fav-active .dx-icon {
+    color: gold !important;
+  }
+  
+  .fav-inactive .dx-icon {
+    color: gray !important;
+  }

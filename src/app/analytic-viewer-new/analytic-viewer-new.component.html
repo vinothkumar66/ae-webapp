@@ -1,0 +1,59 @@
+<div class="top-bar">
+  <dx-button text="Add Control" icon="add" type="default" (onClick)="addCard()"></dx-button>
+  <dx-button text="Save" icon="save" type="success" (onClick)="onSaveClicked()"></dx-button>
+</div>
+
+<div class="card-container">
+  <div class="card" *ngFor="let card of cards">
+    <div class="card-header">
+      <span class="card-title">{{ card.title || 'Card Title' }}</span>
+      <div class="card-actions">
+        <dx-button icon="overflow" type="normal" stylingMode="text" (onClick)="configureCard(card.id)"></dx-button>
+        <dx-button icon="close" type="danger" stylingMode="text" (onClick)="removeCard(card.id)"></dx-button>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <ng-container *ngIf="card.showId === '52'|| card.showId === '53'|| card.showId === '54' || card.showId === '55' || card.showId === '56'|| card.showId === '74'
+        || card.showId === '72' || card.showId === '50' || card.showId === '51' || card.showId === '60' || card.showId === '26' || card.showId === '30' || card.showId === '29'
+        || card.showId === '27' || card.showId === '28' || card.showId === '1' || card.showId === '12' || card.showId === '9' || card.showId === '8' || card.showId === '5'
+        || card.showId === '2' || card.showId === '11' || card.showId === '10' || card.showId === '6' || card.showId === '4'  || card.showId === '33' || card.showId === '31'
+        || card.showId === '21' || card.showId === '18' || card.showId === '25' || card.showId === '24' || card.showId === '13' || card.showId === '14' || card.showId === '16'
+        || card.showId === '17' || card.showId === '22' || card.showId === '15' || card.showId === '19' || card.showId === '20' || card.showId === '23' || card.showId === '32'
+        || card.showId === '57' || card.showId === '58' || card.showId === '48' || card.showId === '49' || card.showId === '67' || card.showId === '77' || card.showId === '34'
+        || card.showId === '35' || card.showId === '38' || card.showId === '39' || card.showId === '37' || card.showId === '36' || card.showId === '45' || card.showId === '43'
+        || card.showId === '44' || card.showId === '42' || card.showId === '41' || card.showId === '40'">
+        <div *ngIf="card.showChart && card.showId != '77' && card.showId != '45'">
+          <dx-chart
+            [dataSource]="card.chartData"
+            [series]="card.chartSeries"
+            [valueAxis]="card.chartAxes"
+            [argumentAxis]="card.argumentAxis"
+            [tooltip]="card.tooltip"
+            [legend]="{ verticalAlignment: 'top', horizontalAlignment: 'center' }">
+          </dx-chart>
+        </div>
+
+        <div *ngIf="card.showGrid">
+          <dx-data-grid
+            [dataSource]="card.tableData"
+            [showBorders]="true"
+            [columnAutoWidth]="true"
+            [rowAlternationEnabled]="true" [paging]="{ pageSize: 5 }"
+            [pager]="{
+              showPageSizeSelector: true,
+              visible: true,
+              allowedPageSizes: [5, 10, 20, 'all'],
+              showInfo: true
+            }"
+            [searchPanel]="{ visible: true, width: 240, placeholder: 'Search...' }">
+          </dx-data-grid>
+        </div>
+      </ng-container>
+
+      <div *ngIf="!card.showChart &&  !card.showGrid" class="empty-placeholder">
+        Click ⋮ to configure.
+      </div>
+    </div>
+  </div>
+</div>

@@ -5,3 +5,7 @@
 .sett {
     text-align: end;
 }
+
+input {
+    width: 50px;
+}

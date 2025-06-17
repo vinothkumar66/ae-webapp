@@ -21,7 +21,7 @@ export class LoginComponent {
   showPassword = false;
   username = '';
   password = '';
-
+  
   constructor(private apiService: ApiService, private router: Router, private authService: AuthService) {}
 
   togglePasswordVisibility(): void {
@@ -29,12 +29,19 @@ export class LoginComponent {
   }
 
   login(): void {
+    localStorage.clear();
     if (this.username && this.password) {
       const loginData = {
         UserName: this.username,
         Password: this.password,
         grant_type: 'password',
       };
+
+      localStorage.setItem('Username', this.username);
+      
+      this.apiService.storePassword(
+        this.password
+      );
 
       this.apiService.tokenLogin(loginData).subscribe(
         (tokenResponse) => {
@@ -46,7 +53,7 @@ export class LoginComponent {
             this.apiService.login(loginData).subscribe(
               (loginResponse) => {
                 this.authService.setAuthUser(loginResponse);
-                this.router.navigate(['/home']);
+                this.router.navigate(['analytic']);
               },
               (error) => {
                 console.error('Login failed', error);

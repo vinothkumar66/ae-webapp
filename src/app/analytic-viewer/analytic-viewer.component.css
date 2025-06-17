@@ -1,0 +1,84 @@
+.button-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.analysis-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background-color: var(--dx-color-main-bg);
+}
+
+.card {
+  border: 1px solid  var(--dx-color-separator);
+  border-radius: 8px;
+  background-color: var(--dx-color-main-bg);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--dx-color-separator);
+}
+
+.card-header-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.card-separator {
+  border: 0;
+  border-top: 1px solid  var(--dx-color-separator);
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 10px;
+}
+
+.table-container {
+  border-top: 1px solid var(--dx-color-separator);
+}
+ 
+.dx-data-grid, .dx-chart {
+  width: 100%;
+}
+
+.dx-data-grid .dx-datagrid-rowsview,
+.dx-chart {
+  border-radius: 5px;
+}
+
+.eeumacalcu {
+  border-top: 1px solid var(--dx-color-separator);
+}
+
+.AlmDash {
+  flex-direction: row !important;
+}
+
+.AlmDash-main {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}
+
+.AlmDash-Content {
+  border: 1px solid var(--dx-color-separator);
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.AlmDash-Content span {
+  color: var(--dx-color-icon);
+}

@@ -12,29 +12,69 @@
   }"
   [editing]="{
     mode: 'row',
-    allowUpdating: true,
     allowDeleting: true,
     useIcons: true
   }"
   [paging]="{ pageSize: 10 }"
-  (onRowRemoving)="onDeleteRow($event)">
-  <dxi-column dataField="pageid" caption="Page ID"  [visible]="false" ></dxi-column>
-  <dxi-column dataField="pagename" caption="Page Name"></dxi-column>
+  [scrolling]="{
+    rowRenderingMode: 'virtual',
+  }"
+  [pager]="{ showPageSizeSelector: true, showInfo: true, visible: true, allowedPageSizes: [10, 20, 50, 'all']}"
+  (onRowRemoving)="onDeleteRow($event)"
+  (onRowUpdated)="onRowUpdated($event)"
+>
+  <dxi-column cellTemplate="quickAccessTemplate"></dxi-column>
+  <dxi-column dataField="pageid" caption="Page ID" [visible]="false"></dxi-column>
+  <dxi-column dataField="pagename" caption="Page Name" cellTemplate="pageNameTemplate"></dxi-column>
   <dxi-column dataField="pagetype" caption="Page Type" [allowEditing]="false"></dxi-column>
   <dxi-column dataField="pageaccesstype" caption="Page Access Type" [allowEditing]="false"></dxi-column>
   <dxi-column dataField="username" caption="Last Updated By" [allowEditing]="false"></dxi-column>
   <dxi-column dataField="mod_time" caption="Last Updated Date" [allowEditing]="false"></dxi-column>
+  <dxi-column cellTemplate="dashboardTemplate"></dxi-column>
 
-  <dxi-column type="buttons">
-    <dxi-button
-        icon="eyeclose"
-        hint="Quick Access"
-    ></dxi-button>
-    <dxi-button
-        icon="check"
-        hint="Default Page"
-    ></dxi-button>
-    <dxi-button name="edit"></dxi-button>
-    <dxi-button name="delete"></dxi-button>
-  </dxi-column>
+  <div *dxTemplate="let cell of 'pageNameTemplate'">
+    <dx-button
+      [text]="cell.text"
+      stylingMode="text"
+      type="default"
+      (onClick)="navigateToPage(cell.data, 'self')"
+    ></dx-button>
+    <dx-button
+      icon="panelleft"
+      stylingMode="text"
+      type="default"
+      hint="Open in new tab"
+      (onClick)="navigateToPage(cell.data, 'blank')"
+    ></dx-button>
+  </div>
+
+  <div *dxTemplate="let cell of 'quickAccessTemplate'">
+    <dx-button
+      icon="favorites"
+      stylingMode="text"
+      [class.fav-active]="isQuickAccess(cell.data.pageid)"
+      [class.fav-inactive]="!isQuickAccess(cell.data.pageid)"
+      (onClick)="toggleQuickAccess(cell.data.pageid)"
+      hint="Quick Access page"
+    ></dx-button>
+  </div>
+
+  <div *dxTemplate="let cell of 'dashboardTemplate'">
+    <dx-button
+      *ngIf="defaultPageId !== cell.data.pageid"
+      icon="taskcomplete"
+      stylingMode="text"
+      type="default"
+      hint="Set as Default page"
+      (onClick)="setDefaultPage(cell.data.pageid)"
+    ></dx-button>
+    <dx-button
+      *ngIf="defaultPageId === cell.data.pageid"
+      icon="taskrejected"
+      stylingMode="text"
+      type="danger"
+      hint="Remove from Default page"
+      (onClick)="removeDefaultPage()"
+    ></dx-button>
+  </div>
 </dx-data-grid>

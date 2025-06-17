@@ -1,0 +1,5 @@
+a {
+    cursor: pointer; 
+    color: var(--dx-color-link); 
+    text-decoration: none;
+}

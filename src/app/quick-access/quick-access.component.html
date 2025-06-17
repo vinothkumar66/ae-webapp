@@ -1,6 +1,6 @@
-<span>Quick Access</span>
+<span>Quick Access Pages</span>
 
-<dx-data-grid 
+<dx-data-grid
   [dataSource]="QuickAccessList"
   [showBorders]="true"
   [paging]="{ pageSize: 5 }"
@@ -15,7 +15,20 @@
     width: 240,
     placeholder: 'Search...'
   }"
+  [editing]="{
+    mode: 'row',
+    allowDeleting: true,
+    useIcons: true
+  }"
+  (onRowRemoving)="onRowRemoving($event)"
 >
-  <dxi-column dataField="PageName" caption="Page Name"></dxi-column>
+  <dxi-column dataField="PageName" caption="Page Name" cellTemplate="pageNameTemplate"></dxi-column>
   <dxi-column dataField="PageType" caption="Page Type"></dxi-column>
+  <dxi-column dataField="QucikPageId" caption="Quick Page Id" [visible]="false"></dxi-column>
+
+  <div *dxTemplate="let cell of 'pageNameTemplate'">
+    <a (click)="navigateToPage(cell.data)">
+      {{ cell.text }}
+    </a>
+  </div>
 </dx-data-grid>

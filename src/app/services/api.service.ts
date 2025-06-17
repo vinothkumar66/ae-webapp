@@ -31,6 +31,30 @@ export class ApiService {
     return this.http.post(`${environment.apiUrl}token`, body, { headers });
   }
 
+  storePassword(password: string) {
+    localStorage.setItem('ausp', btoa(password));
+  }
+
+  validateCurrentPassword(password: string) {
+    if (localStorage.getItem('ausp')) {
+      const ps = atob(localStorage.getItem('ausp') as string);
+      return ps === password;
+    }
+    return false;
+  }
+
+  changePassword(password: any) {
+    const user = this.getUser();
+
+    let body = {
+      UserId: user.UserId,
+      Password: password,
+    };
+    return this.http.post(environment.apiUrl + 'ChangeUserPassword', body, {
+      headers: this.getAuthHeaders(),
+    });
+  }
+  
   login(data: any): Observable<any> {
     const params = new HttpParams()
       .set('UserName', data.UserName)
@@ -62,14 +86,14 @@ export class ApiService {
   }
 
   GetAlmPerformanceChartSettings() {
-    return this.http.post(environment.apiUrl + 'GetAlmPerformanceChartSettings',{}, {
+    return this.http.post(environment.apiUrl + 'GetAlmPerformanceChartSettings', {}, {
         headers: this.getAuthHeaders(),
       }
     );
   }
 
   GetAlmPerformanceDashboardSettings() {
-    return this.http.post(environment.apiUrl + 'GetAlmPerformanceDashboardSettings',{}, {
+    return this.http.post(environment.apiUrl + 'GetAlmPerformanceDashboardSettings', {}, {
         headers: this.getAuthHeaders(),
       }
     );
@@ -82,7 +106,7 @@ export class ApiService {
   }
 
   GetAnalysisDuration() {
-    return this.http.post(environment.apiUrl + 'GetAnalysisDurationSettings',{}, {
+    return this.http.post(environment.apiUrl + 'GetAnalysisDurationSettings', {}, {
         headers: this.getAuthHeaders(),
       }
     );
@@ -125,10 +149,18 @@ export class ApiService {
     return this.http.get(environment.apiUrl + 'GetServers', { headers: this.getAuthHeaders() });
   }
 
+  getAnalysis() {
+    return this.http.get(environment.apiUrl + 'GetAnalysis',  { headers: this.getAuthHeaders() });
+  }
+
   GetFields(val: string) {
     let params = new HttpParams();
     params = params.append('displaytype', val);
-    return this.http.get(environment.apiUrl + 'GetFields', { headers: this.getAuthHeaders(), params: params });
+    return this.http.get(environment.apiUrl + 'GetFields', { headers: this.getAuthHeaders(), params});
+  }
+  
+  GetAnalyticData(data: any) {
+    return this.http.post(environment.apiUrl + 'PerformAnalysis', data, { headers: this.getAuthHeaders() });
   }
 
   GetColumnValues(columnName: string, serverid: number) {
@@ -186,6 +218,41 @@ export class ApiService {
     });
   }
 
+  addDefaultPage(pageId: any) {
+    const user = this.getUser();
+    const body = {
+      UserId: user.UserId,
+      AIMSPageId: pageId,
+      DataPageId: 2,
+    };
+
+    return this.http.post(environment.apiUrl + 'AddDefaultPage', body, {
+      headers: this.getAuthHeaders(),
+    });
+  }
+
+  deleteDefaultPage(AIMSPageId: string) {
+    const user = this.getUser();
+    const body = {
+      UserId: user.UserId,
+      AIMSPageId: AIMSPageId,
+    };
+    
+    return this.http.delete(environment.apiUrl + 'DeleteDefaultPage', {
+      headers: this.getAuthHeaders(),
+      body,
+    });
+  }
+
+  getDefaultPage() {
+    const user = this.getUser();
+    const params = new HttpParams().set('UserId', user.UserId);
+    return this.http.get(environment.apiUrl + 'GetDefaultPage', {
+      headers: this.getAuthHeaders(),
+      params: params,
+    });
+  }
+
   getAIMSHierarchyPages(): Observable<any> {
     const user = this.getUser();
     const params = new HttpParams()
@@ -208,6 +275,15 @@ export class ApiService {
     return this.http.post(environment.apiUrl + 'UpdateWindow', data, {
       headers: this.getAuthHeaders()
     });
+  }
+
+  UpdateAEPage(data: any) {
+    let pageProp = JSON.parse(data.PageProperties);
+    pageProp.forEach((el: any) => {
+      el.dataSource = [];
+    });
+    data['PageProperties'] = JSON.stringify(pageProp);
+    return this.http.post(environment.apiUrl + 'UpdateAEPage', data);
   }
 
   GetRealTimeData(windowId: any, startup: any, recordId: any) {
@@ -277,6 +353,127 @@ export class ApiService {
     return this.http.get(environment.apiUrl + 'GetUserUnitsByAreaId', {
       headers: this.getAuthHeaders(),
       params,
+    });
+  }
+
+  updateEEumaStandard(name: string, val: string) {
+    let body = { metricname: name, value: val };
+    return this.http.post(environment.apiUrl + 'UpdatEEumaStandard', body, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  updateIECStandard(name: string, val: string) {
+    let body = {
+      metricname: name,
+      value: val,
+    };
+    return this.http.post(environment.apiUrl + 'UpdatIECStandard', body, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  updateEeumaCalculation(data: any) {
+    return this.http.post(environment.apiUrl + 'UpdateEEUMACalculation', data, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  addEEUMACalculation(data: any) {
+    return this.http.post(environment.apiUrl + 'AddEEUMACalculation', data, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  deleteEEUMACalculation(id: string) {
+    return this.http.delete(
+      environment.apiUrl + 'DeleteEEUMACalculation?eeumacalucationid=' + id, {
+        headers: this.getAuthHeaders()
+      });
+  }
+
+  UpdateAlmPerformanceChartSettings(data: any) {
+    if(data.category === "Operator Load in Normal Operation"){
+      var fromvalue = data.noofdaysfrom;
+      var tovalue = data.noofdaysto;
+    } else if (data.category === "Operator Load in Upset Operation") {
+      var fromvalue = data.noofhoursfrom;
+      var tovalue = data.noofhoursto;
+    } else {
+      var fromvalue = data.percentagefrom;
+      var tovalue = data.percentageto;
+    }
+
+    let body = {
+      category: data.category,
+      targetvalue: data.targetvalue,
+      fromvalue: fromvalue,
+      tovalue: tovalue,
+      rating: data.rating,
+    };
+    return this.http.post(
+      environment.apiUrl + 'UpdateAlmPerformanceChartSettings?Category=' + body.category + '&TargetValue=' + body.targetvalue + '&FromValue=' + body.fromvalue + '&ToValue=' + body.tovalue + '&Rating=' + body.rating ,
+      body, {
+        headers: this.getAuthHeaders()
+      });
+  }
+
+  UpdateAlmPerformanceDashboardSettings(
+    data: any
+  ) {
+    return this.http.post(
+      environment.apiUrl + 'UpdateAlmPerformanceDashboardSettings?Category=' + data.category + '&Metricname=' + data.metricname + '&Value=' + data.value,
+      data, {
+        headers: this.getAuthHeaders()
+      });
+  }
+
+  updateAnalysisDuration(data: any) {
+    return this.http.post(environment.apiUrl + 'UpdateAnalysisDuration', data, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  addAnalysisDuration(data: any) {
+    return this.http.post(environment.apiUrl + 'AddAnalysisDuration', data, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  deleteAnalysisDuration(id: string) {
+    return this.http.delete(environment.apiUrl + 'DeleteAnalysisDuration?analysisdurationsettingsid=' +id, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  addPriorityAttributes(data: any) {
+    return this.http.post(environment.apiUrl + 'AddPriorityAttributes', data, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  updatePriorityAttribute(data: any) {
+    return this.http.post(environment.apiUrl + 'UpdatePriorityAttributes', data, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  DeletePriorityAttributes(id: string) {
+    return this.http.delete(environment.apiUrl + 'DeletePriorityAttributes?priorityattributeid=' + id, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  updateAreaOperators(data: any) {
+    let body = { areaid: data.areaid, operartors: data.operartors }; 
+    return this.http.post(environment.apiUrl + 'UpdateAreaOperators', body, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  updateAnalysisSetting(body: any) {
+    return this.http.post(environment.apiUrl + 'SaveAnalysisSettings', body, {
+      headers: this.getAuthHeaders()
     });
   }
 }

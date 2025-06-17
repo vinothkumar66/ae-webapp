@@ -1,0 +1,35 @@
+<dx-toolbar [items]="headertoolbar" id="header-toolbar" class="header-toolbar"></dx-toolbar>
+
+<div class="grid-container">
+  <div
+    *ngFor="let card of cards"
+    class="resizable-card-wrapper"
+    [style.width.px]="card.width"
+    [style.height.px]="card.height"
+  >
+    <div
+      class="dx-card dx-theme-background-color dx-theme-text-color dx-theme-border-color resizable-card"
+    >
+      <div class="dx-card-header dx-theme-border-color">
+        <div class="dx-card-title">{{ getWindowTitle(card.id) }}</div>
+        <div class="dx-card-actions">
+          <dx-button icon="preferences" stylingMode="text" (onClick)="onSettings(card.id)"></dx-button>
+          <dx-button icon="trash" stylingMode="text" (onClick)="onRemoveCard(card.id)"></dx-button>
+        </div>
+      </div>
+
+      <div class="dx-card-body" style="height: calc(100% - 60px); overflow: auto;">
+        <dx-data-grid
+          [dataSource]="card.dataSource"
+          [showBorders]="true"
+          [columns]="card.columns"
+          [columnAutoWidth]="true"
+          [paging]="{ enabled: true, pageSize: 5 }"
+          [pager]="{ showPageSizeSelector: false, showInfo: true, visible: true }"
+          [searchPanel]="{ visible: true, highlightCaseSensitive: true }"
+          style="height: 100%;"
+        ></dx-data-grid>
+      </div>
+    </div>
+  </div>
+</div>

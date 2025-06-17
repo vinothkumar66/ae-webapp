@@ -1,0 +1,41 @@
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  width: auto;
+}
+
+.form-grid label {
+  align-self: center;
+}
+
+.hidden {
+  display: none;
+}
+
+.results pre {
+  background: var(--dx-component-color-bg);
+  border: 1px solid var(--dx-color-separator);
+  padding: 12px;
+  border-radius: 4px;
+  word-wrap: normal;
+  font-size: 13px;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
+.dx-list {
+  border: 1px solid var(--dx-color-separator);
+  margin-top: 5px;
+}
+
+.button-container {
+  display: flex;
+  justify-content: end;
+  gap: 10px;
+  z-index: 1000;
+  position: sticky;
+  top: 0;
+  background: var(--dx-component-color-bg);
+  padding: 10px 0;
+}
