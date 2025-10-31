@@ -9,7 +9,7 @@
 >
   <ng-container *ngFor="let card of cards">
     <dx-resizable
-      [minHeight]="200"
+      [minHeight]="200" 
       [minWidth]="200"
       [handles]="'right bottom'"
       [width]="card.width"
@@ -18,10 +18,10 @@
     >
       <div class="dx-card dx-theme-background-color dx-theme-text-color dx-theme-border-color" style="margin: 10px;">
         <div class="dx-card-header dx-theme-border-color">
-          <div class="dx-card-title">Realtime control {{ card.id }}</div>
+          <div class="dx-card-title">control {{ card.id }}</div>
           <div class="dx-card-actions">
-            <dx-button icon="preferences" stylingMode="text" (onClick)="onSettings(card.id)"></dx-button>
-            <dx-button icon="trash" stylingMode="text" (onClick)="onRemoveCard(card.id)"></dx-button>
+            <dx-button icon="preferences" stylingMode="text"></dx-button>
+            <dx-button icon="trash" stylingMode="text"></dx-button>
           </div>
         </div>
 
@@ -41,113 +41,3 @@
     </dx-resizable>
   </ng-container>
 </dx-sortable>
-
-<dx-popup
-  [visible]="popupVisible"
-  [showTitle]="true"
-  title="Control Settings"
-  [showCloseButton]="true"
-  width="60%"
-  height="auto"
-  [dragEnabled]="true"
-  [closeOnOutsideClick]="true"
-  [position]="{ at: 'top', my: 'top' }"
-  (onHiding)="closePopup()"
->
-  <div *ngIf="selectedCardId" class="popup-scroll-container">
-    <dx-form
-      [formData]="cardSettings"
-      [colCount]="2"
-      labelLocation="top"
-    >
-      <dxi-item dataField="windowTitle" editorType="dxTextBox" [label]="{ text: 'Window Title' }"></dxi-item>
-
-      <dxi-item
-        dataField="server"
-        editorType="dxSelectBox"
-        [label]="{ text: 'Server' }"
-        [editorOptions]="{
-          dataSource: servers,
-          value: cardSettings.server,
-          displayExpr: 'name',
-          valueExpr: 'id'
-        }"
-        (onValueChanged)="onServerChange($event)"
-      ></dxi-item>
-
-      <dxi-item
-        dataField="eventsAtStartup"
-        editorType="dxNumberBox"
-        [label]="{ text: 'No Of Events At Startup' }"
-      ></dxi-item>
-
-      <dxi-item
-        dataField="maxEvents"
-        editorType="dxNumberBox"
-        [label]="{ text: 'Max Events To Display' }"
-      ></dxi-item>
-
-      <dxi-item itemType="simple" [colSpan]="1">
-        <ng-template dxTemplate="content">
-          <span>Add Conditions</span>
-          <dx-filter-builder
-            [(value)]="filterValue"
-            [fields]="filterFields"
-            [allowHierarchicalFields]="true"
-            [groupOperations]="['and', 'or']"
-            (onEditorPreparing)="onEditorPreparing($event)">
-          </dx-filter-builder>
-        </ng-template>
-      </dxi-item>
-    
-      <dxi-item [colSpan]="1">
-        <ng-template dxTemplate="template" let-data="data">
-          <div class="results">
-            <b>Final Query</b>
-            <pre>{{ cardSettings.fields }}</pre>
-          </div>
-        </ng-template>
-      </dxi-item>
-    
-      <dxi-item itemType="simple" [colSpan]="1">
-        <ng-template dxTemplate="content">
-          <span>Available Fields</span>
-          <dx-list [dataSource]="displayFields" keyExpr="id" height="400">
-            <dxo-item-dragging
-              group="tasks"
-              [data]="displayFields"
-              [allowReordering]="true"
-              [onDragStart]="onDragStart"
-              [onAdd]="onAdd"
-              [onRemove]="onRemove"
-              [onReorder]="onReorder">
-            </dxo-item-dragging>
-          </dx-list>
-        </ng-template>
-      </dxi-item>
-    
-      <dxi-item itemType="simple" [colSpan]="1">
-        <ng-template dxTemplate="content">
-          <span>Selected Fields</span>
-          <dx-list [dataSource]="defaultFields" keyExpr="id" height="400">
-            <dxo-item-dragging
-              group="tasks"
-              [data]="defaultFields"
-              [allowReordering]="true"
-              [onDragStart]="onDragStart"
-              [onAdd]="onAdd"
-              [onRemove]="onRemove"
-              [onReorder]="onReorder">
-            </dxo-item-dragging>
-          </dx-list>
-        </ng-template>
-      </dxi-item>
-    </dx-form>
-
-    <div class="popup-actions">
-      <dx-button text="Save" type="default" stylingMode="contained" (onClick)="onSettingSaved()"></dx-button>
-      <dx-button text="Cancel" stylingMode="text" (onClick)="closePopup()"></dx-button>
-    </div>
-  </div>
-</dx-popup>
-

@@ -135,6 +135,15 @@ export class ApiService {
       params,
     });
   }
+
+  getPageProperties(id: any) {
+    let params = new HttpParams();
+    params = params.append('PageId', id);
+    return this.http.get(environment.apiUrl + 'GetPageProperties', {
+      headers: this.getAuthHeaders(),
+      params: params,
+    });
+  }
   
   getAllReports() {
     const user = this.getUser();
@@ -277,13 +286,25 @@ export class ApiService {
     });
   }
 
+  SaveAEPage(data: any) {
+    let pageProp = JSON.parse(data.PageProperties);
+    console.log(pageProp)
+
+    data['PageProperties'] = JSON.stringify(pageProp);
+    return this.http.post(environment.apiUrl + 'SaveAEPage', data, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
   UpdateAEPage(data: any) {
     let pageProp = JSON.parse(data.PageProperties);
     pageProp.forEach((el: any) => {
       el.dataSource = [];
     });
     data['PageProperties'] = JSON.stringify(pageProp);
-    return this.http.post(environment.apiUrl + 'UpdateAEPage', data);
+    return this.http.post(environment.apiUrl + 'UpdateAEPage', data, {
+      headers: this.getAuthHeaders()
+    });
   }
 
   GetRealTimeData(windowId: any, startup: any, recordId: any) {
@@ -335,9 +356,9 @@ export class ApiService {
   GetAreasByPlantId(id: any) {
     const user = this.getUser();
     const params = new HttpParams()
-      .set('PlantId', user.UserId)
+      .set('UserId', user.UserId)
       .set('GroupId', user.GroupId)
-      .set('SiteId', id);
+      .set('PlantId', id);
     return this.http.get(environment.apiUrl + 'GetUserAreasByPlantId', {
       headers: this.getAuthHeaders(),
       params,
@@ -347,7 +368,7 @@ export class ApiService {
   GetUnitsByAreaId(id: any) {
     const user = this.getUser();
     const params = new HttpParams()
-      .set('PlantId', user.UserId)
+      .set('UserId', user.UserId)
       .set('GroupId', user.GroupId)
       .set('AreaId', id);
     return this.http.get(environment.apiUrl + 'GetUserUnitsByAreaId', {

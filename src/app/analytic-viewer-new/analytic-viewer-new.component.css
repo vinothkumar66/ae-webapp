@@ -6,8 +6,6 @@
 }
 
 .card-container {
-  display: grid;
-  /* grid-template-columns: repeat(auto-fill, minmax(40%, 1fr)); */
   gap: 20px;
   transition: all 0.3s ease;
 }
@@ -19,7 +17,6 @@
   padding: 20px;
   box-shadow: 0 2px 8px var(--dx-color-separator);
   transition: all 0.3s ease;
-  width: calc(100vw - 150px);
 }
 
 .card-header {

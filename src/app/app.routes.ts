@@ -16,6 +16,8 @@ import { RealtimeViewerComponent } from './realtime-viewer/realtime-viewer.compo
 import { AnalyticViewerNewComponent } from './analytic-viewer-new/analytic-viewer-new.component';
 import { AnalyticControlNewComponent } from './analytic-control-new/analytic-control-new.component';
 import { RealtimeViewerResizeComponent } from './realtime-viewer-resize/realtime-viewer-resize.component';
+import { Dashboard } from './dashboard/dashboard';
+import { AddChart } from './add-chart/add-chart';
 
 export const routes: Routes = [
   { path: '', component: LoginComponent },
@@ -28,6 +30,7 @@ export const routes: Routes = [
       { path: 'analytic/:id', component: AnalyticViewerComponent },
       { path: 'analytic-control', component: AnalyticControlComponent },
       { path: 'realtime', component: RealtimeViewerComponent },
+      { path: 'realtime-new', component: RealtimeeComponent },
       { path: 'realtime-control/:id', component: RealtimeControlComponent },
       { path: 'export', component: ExportDataComponent },
       { path: 'reports', component: ReportsViewerComponent },
@@ -36,11 +39,12 @@ export const routes: Routes = [
       { path: 'quickaccess', component: QuickAccessComponent },
       { path: 'general-settings', component: GeneralSettingsComponent },
       { path: 'analysis-settings', component: AnalysisSettingsComponent },
-
       { path: 'realtimecontrol', component: RealtimeeComponent },
       { path: 'realtime-resize', component: RealtimeViewerResizeComponent },
       { path: 'analytic-control-new/:id', component: AnalyticControlNewComponent },
       { path: 'analytic-new', component: AnalyticViewerNewComponent },
+      { path: 'dashboard', component: Dashboard },
+      { path: 'add-chart', component: AddChart },
     ]
   }
 ];

@@ -4,16 +4,28 @@
     <div class="content">
         <aside class="sidebar">
            <ul class="sidebar-links">
+                <li (click)="navigateTo('dashboard')"
+                    [ngClass]="{ active: currentRoute === '/dashboard' }"
+                    title="Dashboard">
+                    <span class="dx-icon dx-icon-datausage"></span> 
+                    <span class="link-text">Dashboard</span>
+                </li>
                 <li (click)="navigateTo('analytic')"
                     [ngClass]="{ active: currentRoute === '/analytic' }"
                     title="Analytics Viewer">
                     <span class="dx-icon dx-icon-datatrending"></span> 
                     <span class="link-text">Analytics Viewer</span>
                 </li>
+                <!-- <li (click)="navigateTo('analytic-new')"
+                    [ngClass]="{ active: currentRoute === '/analytic-new' }"
+                    title="Resize">
+                    <span class="dx-icon dx-icon-datatrending"></span> 
+                    <span class="link-text">Analytics Viewer New</span>
+                </li> -->
                 <li (click)="navigateTo('realtime')"
                     [ngClass]="{ active: currentRoute === '/realtime' }"
                     title="Realtime Viewer">
-                    <span class="dx-icon dx-icon-datausage"></span> 
+                    <span class="dx-icon dx-icon-dataarea"></span> 
                     <span class="link-text">Realtime Viewer</span>
                 </li>
                 <li (click)="navigateTo('export')"
@@ -65,19 +77,12 @@
                     <span class="link-text">Logout</span>
                 </li>
 
-                <li (click)="navigateTo('realtime-resize')"
+                <!-- <li (click)="navigateTo('realtime-resize')"
                     [ngClass]="{ active: currentRoute === '/realtime-resize' }"
                     title="Resize">
                     <span class="dx-icon dx-icon-dragvertical"></span> 
                     <span class="link-text">Resizable component</span>
-                </li>
-
-                 <li (click)="navigateTo('analytic-new')"
-                    [ngClass]="{ active: currentRoute === '/analytic-new' }"
-                    title="Resize">
-                    <span class="dx-icon dx-icon-tips"></span> 
-                    <span class="link-text">analytic new</span>
-                </li>
+                </li> -->
             </ul>
         </aside>
         <div class="maincontent">

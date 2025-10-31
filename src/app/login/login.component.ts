@@ -53,7 +53,7 @@ export class LoginComponent {
             this.apiService.login(loginData).subscribe(
               (loginResponse) => {
                 this.authService.setAuthUser(loginResponse);
-                this.router.navigate(['analytic']);
+                this.router.navigate(['dashboard']);
               },
               (error) => {
                 console.error('Login failed', error);

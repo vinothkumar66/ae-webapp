@@ -1,0 +1,498 @@
+<div class="dashboard-toolbar">
+  <dx-button
+    *ngIf="!isViewerMode"
+    icon="save"
+    text="Save"
+    hint="Save Dashboard"
+    stylingMode="contained"
+    type="default"
+    (onClick)="saveDashboard()"
+  ></dx-button>
+
+  <dx-button
+    *ngIf="!isViewerMode"
+    icon="trash"
+    text="Clear"
+    hint="Clear Dashboard"
+    stylingMode="outlined"
+    type="danger"
+    (onClick)="clearDashboard()"
+  ></dx-button>
+
+  <dx-button
+    *ngIf="!isViewerMode"
+    icon="eyeopen"
+    text="Viewer"
+    hint="Switch to Viewer"
+    stylingMode="text"
+    (onClick)="toggleViewerMode()"
+  ></dx-button>
+
+  <dx-button
+    *ngIf="!isViewerMode"
+    icon="plus"
+    text="Add Chart"
+    hint="Add Chart"
+    stylingMode="contained"
+    type="success"
+    (onClick)="goToAddChart()"
+  ></dx-button>
+
+  <dx-button
+    *ngIf="isViewerMode"
+    icon="edit"
+    text="Designer"
+    hint="Switch to Designer"
+    stylingMode="contained"
+    (onClick)="toggleViewerMode()"
+  ></dx-button>
+</div>
+
+<div class="dashboard-container">
+  <div class="main-content" (drop)="dropChart($event)" (dragover)="allowDrop($event)">
+    <div *ngIf="dashboardHeader" class="dashboard-header">
+      <ng-container *ngIf="!isViewerMode; else viewHeader">
+        <input [(ngModel)]="dashboardHeader.text" class="header-input" placeholder="Enter dashboard title..." />
+      </ng-container>
+      <ng-template #viewHeader> 
+        <h2 class="header-title">{{ dashboardHeader.text }}</h2>
+      </ng-template> 
+    </div> 
+
+    <div *ngFor="let row of dashboardItems; let i = index" class="row-widget">
+      <div 
+        *ngIf="!isViewerMode" 
+        class="row-drag-handle"
+        draggable="true"
+        (dragstart)="startRowDrag($event, i)"
+        (drop)="dropRow($event, i)"
+        (dragover)="rowDragOver($event)"
+        (dragleave)="rowDragLeave($event)"
+      >
+        <i class="dx-icon dx-icon-dragvertical drag-icon"></i>
+        <button class="delete-row-btn" (click)="deleteRow(i)">
+          <i class="dx-icon dx-icon-close close-icon"></i>
+        </button>
+      </div>
+
+      <ng-container *ngIf="row.columns.length === 0 && !isViewerMode">
+        <div class="row-placeholder" (drop)="dropChart($event, row)" (dragover)="allowDrop($event)">
+          Drop columns here
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="row.columns.length > 0">
+        <gridster [options]="row.gridsterOptions">
+          <gridster-item *ngFor="let col of row.columns; let j = index" [item]="col">
+            <div class="col-widget" (drop)="dropChart($event, row, col)" (dragover)="allowDrop($event)">
+              <ng-container *ngIf="col.chartTitle; else emptyCol">
+                <div class="chart-widget">
+                  <div class="chart-header">
+                    <span class="chart-title">{{ col.chartTitle?.pagename || 'Untitled Chart' }}</span>
+                    <button *ngIf="!isViewerMode" class="delete-chart-btn" (click)="deleteCol(row, j)">
+                      <i class="dx-icon dx-icon-close"></i>
+                    </button>
+                  </div>
+
+                  <div class="chart-content">
+                    <!-- showId = 73 (AlarmPerformance chart example) -->
+                    <div class="card-body" *ngIf="col.chartState.showId == 73">
+                      <dx-chart
+                        [dataSource]="col.chartState.AlmChartData"
+                        [valueAxis]="col.chartState.valueAxisConfig"
+                        [argumentAxis]="{ argumentType: 'string', title: 'Area', discreteAxisDivisionMode: 'crossLabels' }"
+                      >
+                        <dxo-legend verticalAlignment="top" horizontalAlignment="center"></dxo-legend>
+                        <dxi-series
+                          *ngFor="let s of col.chartState.seriesData"
+                          [valueField]="s.valueField"
+                          argumentField="Area"
+                          [name]="s.name"
+                          type="bar"
+                          [color]="s.color"
+                        ></dxi-series>
+                      </dx-chart>
+                    </div>
+
+                    <!-- Alarm Performance Dashboard (showId 64) -->
+                    <div class="card-body AlmDash" *ngIf="col.chartState.showId == 64">
+                      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
+                        [dataSource]="col.chartState.AlmDashboardData"
+                        [showBorders]="true"
+                        [cellHintEnabled]="true"
+                        [rowAlternationEnabled]="true"
+                        width="100%"
+                      >
+                        <dxo-paging [enabled]="false"></dxo-paging>
+                        <dxi-column dataField="Area" caption="Area" cssClass="center-header"></dxi-column>
+                        <dxi-column caption="DAET" dataField="DAET_Count" cssClass="center-header">
+                          <ng-template let-data="data" dxTemplate="cell">
+                            <span>
+                              <dx-button icon="preferences"></dx-button>
+                              {{ data.DAET_Count }}
+                            </span>
+                          </ng-template>
+                        </dxi-column>
+                        <dxi-column dataField="AFM_Count" caption="AFM" cssClass="center-header"></dxi-column>
+                      </dx-data-grid>
+
+                      <div class="AlmDash-main">
+                        <div class="AlmDash-Content">
+                          <div>AFM: Alarm Flood Metric</div><br>
+                          <span>Number of hours in the month that had any periods exceeding 10 alarms in 10 minutes.</span>
+                        </div>
+                        <div class="AlmDash-Content">
+                          <div>DAET: Days Alarms Exceed Target</div><br>
+                          <span>Number of days in the month that exceeded 300 alarms.</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- example for showId 52/54/53 -->
+                    <div class="card-body" *ngIf="col.chartState.showId == 52 || col.chartState.showId == 54 || col.chartState.showId == 53">
+                      <dx-chart
+                        [dataSource]="col.chartState.AlmsPerOprPositionData"
+                        [argumentAxis]="{ argumentType: 'string', title: 'Datetime', discreteAxisDivisionMode: 'crossLabels' }"
+                       
+                        [valueAxis]="col.chartState.valueAxisConfig ? col.chartState.valueAxisConfig : undefined"
+                      >
+                        <dxi-series
+                          *ngFor="let series of col.chartState.seriesData"
+                          [valueField]="series.valueField"
+                          [argumentField]="series.argumentField"
+                          [name]="series.name"
+                          type="bar"
+                          [color]="series.color"
+                        ></dxi-series>
+                        <dxo-legend verticalAlignment="top" horizontalAlignment="center"></dxo-legend>
+                      </dx-chart>
+
+                      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
+                        [dataSource]="col.chartState.AlmsPerOprPositionTableData"
+                        [showBorders]="true"
+                        [cellHintEnabled]="true"
+                        [rowAlternationEnabled]="true"
+                       
+                      >
+                        
+                        <dxo-scrolling mode="virtual" rowRenderingMode="virtual"></dxo-scrolling>
+                         <dxo-header-filter [visible]="true">
+    <dxo-search [enabled]="true"></dxo-search>
+  </dxo-header-filter>
+                      </dx-data-grid>
+                    </div>
+
+                    <!-- showId 55/56 (chart OR table) -->
+                    <div class="card-body" *ngIf="col.chartState.showId == 55 || col.chartState.showId == 56">
+                      <div class="chart-container" *ngIf="col.chartState.showChartOnly">
+                        <dx-chart [dataSource]="col.chartState.chartData">
+                          <dxo-legend [visible]="false"></dxo-legend>
+                          <dxi-series *ngFor="let series of col.chartState.chartSeries"
+                            [type]="series.type"
+                            [argumentField]="series.argumentField"
+                            [valueField]="series.valueField"
+                            [name]="series.name">
+                          </dxi-series>
+                          <dxi-value-axis *ngFor="let axis of col.chartState.chartAxis"
+                            [position]="axis.position"
+                            [title]="axis.title"
+                            [showZero]="axis.showZero"
+                            [tickInterval]="axis.tickInterval"
+                            [valueMarginsEnabled]="axis.valueMarginsEnabled"
+                            [constantLines]="axis.constantLines">
+                          </dxi-value-axis>
+                        </dx-chart>
+                      </div>
+
+                      <div class="table-container" *ngIf="col.chartState.showTableOnly">
+                        <dx-data-grid [remoteOperations]="true" [columnWidth]="200" [dataSource]="col.chartState.tableData" [showBorders]="true" [rowAlternationEnabled]="true">
+                          <dxo-scrolling mode="virtual" rowRenderingMode="virtual"></dxo-scrolling>
+                          <dxo-paging [enabled]="true" [pageSize]="5"></dxo-paging>
+                          <dxo-search-panel [visible]="true" [highlightCaseSensitive]="true"></dxo-search-panel>
+                          <dxi-column *ngFor="let column of col.chartState.tableColumns" [dataField]="column"></dxi-column>
+                        </dx-data-grid>
+                      </div>
+                    </div>
+
+                    <!-- showId 62 (EEUMA data) -->
+                    <div class="card-body" *ngIf="col.chartState.showId == 62">
+                      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
+                        [dataSource]="col.chartState.eeumaData"
+                        [showBorders]="true"
+                        [cellHintEnabled]="true"
+                        [rowAlternationEnabled]="true"
+                        [export]="{ enabled: false }"
+                      >
+                        <dxo-scrolling columnRenderingMode="virtual"></dxo-scrolling>
+                        <dxo-paging [enabled]="false"></dxo-paging>
+                        <dxi-column dataField="Metric" caption="Metric" width="500" cssClass="center-header"></dxi-column>
+                        <dxi-column caption="Target" cssClass="center-header">
+                          <dxi-column dataField="Col1" caption="Min" cssClass="center-header"></dxi-column>
+                          <dxi-column dataField="Col2" caption="Max" cssClass="center-header"></dxi-column>
+                        </dxi-column>
+                        <dxi-column dataField="Col3" caption="Value" cssClass="center-header"></dxi-column>
+                      </dx-data-grid>
+
+                      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
+                        [dataSource]="col.chartState.eeumacalcu"
+                        [showBorders]="true"
+                        [cellHintEnabled]="true"
+                        [rowAlternationEnabled]="true"
+                        class="eeumacalcu"
+                      >
+                      </dx-data-grid>
+                    </div>
+
+                    <!-- showId 63 (IEC) -->
+                    <div class="card-body" *ngIf="col.chartState.showId == 63">
+                      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
+                        [dataSource]="col.chartState.iecData"
+                        [showBorders]="true"
+                        [cellHintEnabled]="true"
+                        [rowAlternationEnabled]="true"
+                       
+                        (onCellPrepared)="onCellPrepared($event)"
+                      >
+                        <dxo-paging [enabled]="false"></dxo-paging>
+                        <dxi-column caption="Alarms Performance Metrics" cssClass="center-header">
+                          <dxi-column dataField="Metric" caption="Metric" cssClass="center-header"></dxi-column>
+                          <dxi-column caption="Target" cssClass="center-header">
+                            <dxi-column dataField="Target1" caption="Target 1" cssClass="table-hidden center-header"></dxi-column>
+                            <dxi-column dataField="Target2" caption="Target 2" cssClass="table-hidden center-header"></dxi-column>
+                          </dxi-column>
+                          <dxi-column dataField="Col1" caption="Value" cssClass="center-header" width="150"></dxi-column>
+                        </dxi-column>
+                      </dx-data-grid>
+                    </div>
+
+                    <!-- Alarm vs Operator (61) -->
+                    <div class="card-body" *ngIf="col.chartState.showId == 61">
+                      <dx-chart
+                        [dataSource]="col.chartState.AlarmVsOperatorData[0]?.data"
+                       
+                        [rotated]="false"
+                      >
+                        <dxo-legend [visible]="false"></dxo-legend>
+                        <dxi-pane *ngFor="let pane of col.chartState.AlarmVsOperatorData[0]?.pane" [name]="pane.name"></dxi-pane>
+                        <dxi-series
+                          *ngFor="let series of col.chartState.AlarmVsOperatorData[0]?.series"
+                          [type]="series.type"
+                          [valueField]="series.valueField"
+                          [argumentField]="series.argumentField"
+                          [name]="series.name"
+                          [pane]="series.pane"
+                        ></dxi-series>
+
+                        <dxi-value-axis *ngFor="let axis of col.chartState.AlarmVsOperatorData[0]?.axis"
+                          [position]="axis.position"
+                          [pane]="axis.pane"
+                          [tickInterval]="axis.tickInterval"
+                          [valueMarginsEnabled]="axis.valueMarginsEnabled"
+                          [showZero]="axis.showZero"
+                        >
+                          <dxo-title [text]="axis.title.text"></dxo-title>
+                        </dxi-value-axis>
+                      </dx-chart>
+
+                      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
+                        [dataSource]="col.chartState.AlarmVsOperatorTableData"
+                        [showBorders]="true"
+                        [cellHintEnabled]="true"
+                        [rowAlternationEnabled]="true"
+                       
+                      >
+                        
+                        <dxo-scrolling mode="virtual" rowRenderingMode="virtual"></dxo-scrolling>
+                         <dxo-header-filter [visible]="true">
+    <dxo-search [enabled]="true"></dxo-search>
+  </dxo-header-filter>
+                      </dx-data-grid>
+                    </div>
+
+                    <!-- Chattering / Fleeding / Flood / Frequency / SOE / StandingACK blocks -->
+                    <!-- replicate same patterns but using col.chartState.* arrays and tables -->
+                    <div class="card-body" *ngIf="col.chartState.showId == 72 || col.chartState.showId == 50">
+                      <dx-chart [dataSource]="col.chartState.ChatteringData[0]?.data">
+                        <dxo-legend [visible]="false"></dxo-legend>
+                      </dx-chart>
+                      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
+                        [dataSource]="col.chartState.ChatteringTableData"
+                        [showBorders]="true"
+                        [cellHintEnabled]="true"
+                        [rowAlternationEnabled]="true"
+                       >
+                        
+                        <dxo-scrolling mode="virtual" rowRenderingMode="virtual"></dxo-scrolling>
+                         <dxo-header-filter [visible]="true">
+    <dxo-search [enabled]="true"></dxo-search>
+  </dxo-header-filter>
+                      </dx-data-grid>
+                    </div>
+
+                    <div class="card-body" *ngIf="col.chartState.showId == 51">
+                      <dx-chart [dataSource]="col.chartState.FleedingData[0]?.data">
+                        <dxi-series *ngFor="let s of col.chartState.FleedingData[0]?.series"
+                          [type]="s.type"
+                          [argumentField]="s.argumentField"
+                          [valueField]="s.valueField"
+                          [name]="s.name"
+                          [axis]="s.axis">
+                        </dxi-series>
+                        <dxi-value-axis *ngFor="let a of col.chartState.FleedingData[0]?.axis"
+                          [position]="a.position"
+                          [name]="a.name"
+                          [showZero]="a.showZero"
+                          [tickInterval]="a.tickInterval"
+                          [valueMarginsEnabled]="a.valueMarginsEnabled">
+                          <dxo-title [text]="a.title.text"></dxo-title>
+                        </dxi-value-axis>
+                        <dxo-legend verticalAlignment="top" horizontalAlignment="center"></dxo-legend>
+                      </dx-chart>
+
+                      <dx-data-grid [remoteOperations]="true" [columnWidth]="200" [dataSource]="col.chartState.FleedingTableData" [showBorders]="true" [cellHintEnabled]="true" [rowAlternationEnabled]="true">
+                        
+                        <dxo-scrolling mode="virtual" rowRenderingMode="virtual"></dxo-scrolling>
+                         <dxo-header-filter [visible]="true">
+    <dxo-search [enabled]="true"></dxo-search>
+  </dxo-header-filter>
+                      </dx-data-grid>
+                    </div>
+
+                    <div class="card-body" *ngIf="col.chartState.showId == 60 || col.chartState.showId == 48 || col.chartState.showId == 49 || col.chartState.showId == 67">
+                      <dx-chart *ngIf="col.chartState.FloodData.length" [dataSource]="col.chartState.FloodData[0]?.data">
+                        <dxi-series *ngFor="let s of col.chartState.FloodData[0]?.series"
+                          [type]="s.type" [argumentField]="s.argumentField" [valueField]="s.valueField" [name]="s.name"></dxi-series>
+                        <dxo-value-axis>
+                          <dxo-title [text]="col.chartState.FloodData[0]?.axis[0]?.title?.text"></dxo-title>
+                          <dxi-constant-line *ngFor="let line of col.chartState.FloodData[0]?.axis[0]?.constantLines"
+                            [value]="line.value" [color]="line.color" [width]="line.width" [dashStyle]="line.dashStyle">
+                            <dxo-label [visible]="line.label.visible" [position]="line.label.position" [text]="line.label.text">
+                              <dxo-font [color]="line.label.font.color" [weight]="line.label.font.weight" [size]="line.label.font.size"></dxo-font>
+                            </dxo-label>
+                          </dxi-constant-line>
+                        </dxo-value-axis>
+                        <dxo-legend verticalAlignment="top" horizontalAlignment="center"></dxo-legend>
+                      </dx-chart>
+
+                      <dx-data-grid [remoteOperations]="true" [columnWidth]="200" [dataSource]="col.chartState.FloodTableData" [showBorders]="true" [cellHintEnabled]="true" [rowAlternationEnabled]="true">
+                        
+                        <dxo-scrolling mode="virtual" rowRenderingMode="virtual"></dxo-scrolling>
+                         <dxo-header-filter [visible]="true">
+    <dxo-search [enabled]="true"></dxo-search>
+  </dxo-header-filter>
+                      </dx-data-grid>
+                    </div>
+
+                    <!-- Frequency / Large list of showId values -->
+                    <div class="card-body" *ngIf="col.chartState.showId && (col.chartState.showId == '26' || col.chartState.showId == '30' || col.chartState.showId == '29' || col.chartState.showId == '27' || col.chartState.showId == '28' || col.chartState.showId == '1' || col.chartState.showId == '12' || col.chartState.showId == '9' || col.chartState.showId == '8' || col.chartState.showId == '5' || col.chartState.showId == '2' || col.chartState.showId == '11' || col.chartState.showId == '10' || col.chartState.showId == '6' || col.chartState.showId == '4' || col.chartState.showId == '7' || col.chartState.showId == '3' || col.chartState.showId == '33' || col.chartState.showId == '31' || col.chartState.showId == '76' || col.chartState.showId == '21' || col.chartState.showId == '18' || col.chartState.showId == '25' || col.chartState.showId == '24' || col.chartState.showId == '13' || col.chartState.showId == '14' || col.chartState.showId == '16' || col.chartState.showId == '17' || col.chartState.showId == '22' || col.chartState.showId == '15' || col.chartState.showId == '19' || col.chartState.showId == '20' || col.chartState.showId == '23' || col.chartState.showId == '32' || col.chartState.showId == '57' || col.chartState.showId == '58')">
+                      <dx-chart [dataSource]="col.chartState.FrequencyData[0]?.data" *ngIf="col.chartState.showChartOnly">
+                        <dxo-common-series-settings argumentField="tagno.parameter"></dxo-common-series-settings>
+                        <dxi-series *ngFor="let series of col.chartState.FrequencyData[0]?.series"
+                          [type]="series.type" [valueField]="series.valueField" [name]="series.name" [axis]="series.axis"></dxi-series>
+                        <dxi-value-axis *ngFor="let ax of col.chartState.FrequencyData[0]?.axis"
+                          [name]="ax.name" [position]="ax.position" [showZero]="ax.showZero" [tickInterval]="ax.tickInterval" [valueMarginsEnabled]="ax.valueMarginsEnabled">
+                          <dxo-title [text]="ax.title.text"></dxo-title>
+                        </dxi-value-axis>
+                        <dxo-legend verticalAlignment="top" horizontalAlignment="center"></dxo-legend>
+                      </dx-chart>
+
+                      <dx-data-grid [remoteOperations]="true" [columnWidth]="200" [dataSource]="col.chartState.FrequencyTableData" [showBorders]="true" [cellHintEnabled]="true" [rowAlternationEnabled]="true" *ngIf="col.chartState.showTableOnly">
+                        <dxo-scrolling mode="virtual" rowRenderingMode="virtual"></dxo-scrolling>
+                         <dxo-header-filter [visible]="true">
+    <dxo-search [enabled]="true"></dxo-search>
+  </dxo-header-filter>
+                      </dx-data-grid>
+                    </div>
+
+                    <!-- SOE -->
+                    <div class="card-body" *ngIf="col.chartState.showId == 77 || col.chartState.showId == 47 || col.chartState.showId == 45">
+                      <dx-data-grid [remoteOperations]="true" [columnWidth]="200" [dataSource]="col.chartState.SOETableData" [showBorders]="true" [cellHintEnabled]="true" [rowAlternationEnabled]="true">
+                        
+                        <dxo-scrolling mode="virtual" rowRenderingMode="virtual"></dxo-scrolling>
+                         <dxo-header-filter [visible]="true">
+    <dxo-search [enabled]="true"></dxo-search>
+  </dxo-header-filter>
+                      </dx-data-grid>
+                    </div>
+
+                    <!-- StandingACK -->
+                    <div class="card-body" *ngIf="col.chartState.showId && (col.chartState.showId == '46' || col.chartState.showId == '34' || col.chartState.showId == '35' || col.chartState.showId == '38' || col.chartState.showId == '39' || col.chartState.showId == '37' || col.chartState.showId == '36' || col.chartState.showId == '43' || col.chartState.showId == '44' || col.chartState.showId == '42' || col.chartState.showId == '41' || col.chartState.showId == '40')">
+                      <dx-chart *ngIf="col.chartState.StandingACKData.length" [dataSource]="col.chartState.StandingACKData[0]?.data">
+                        <dxi-series *ngFor="let s of col.chartState.StandingACKData[0]?.series"
+                          [type]="s.type" [argumentField]="s.argumentField" [valueField]="s.valueField" [name]="s.name"></dxi-series>
+                        <dxo-legend verticalAlignment="top" horizontalAlignment="center"></dxo-legend>
+                      </dx-chart>
+
+                      <dx-data-grid [remoteOperations]="true" [columnWidth]="200" [dataSource]="col.chartState.StandingACKTableData" [showBorders]="true" [cellHintEnabled]="true" [rowAlternationEnabled]="true">
+                        
+                        <dxo-scrolling mode="virtual" rowRenderingMode="virtual"></dxo-scrolling>
+                         <dxo-header-filter [visible]="true">
+    <dxo-search [enabled]="true"></dxo-search>
+  </dxo-header-filter>
+                      </dx-data-grid>
+                    </div>
+                  </div>
+                </div>
+              </ng-container>
+
+              <ng-template #emptyCol>
+                <div *ngIf="!isViewerMode" class="empty-col-placeholder">Drop chart here</div>
+              </ng-template>
+            </div>
+          </gridster-item>
+        </gridster>
+      </ng-container>
+
+      <div *ngIf="!isViewerMode" class="row-resize-handle" (mousedown)="startRowResize($event, row, i)"></div>
+    </div>
+  </div>
+
+
+  <div class="right-sidebar" *ngIf="!isViewerMode">
+  <div class="tab-header">
+    <div
+      class="tab-button"
+      [class.active]="activeTab === 'controls'"
+      (click)="activeTab = 'controls'"
+    >
+      Controls
+    </div>
+    <div
+      class="tab-button"
+      [class.active]="activeTab === 'layout'"
+      (click)="activeTab = 'layout'"
+    >
+      Layout Options
+    </div>
+  </div>
+
+  <div class="tab-content" *ngIf="activeTab === 'controls'">
+    <div
+      *ngFor="let chart of availableCharts"
+      class="control-chart-item"
+      draggable="true"
+      (dragstart)="startDrag(chart, $event)"
+    >
+      {{ chart.pagename }}
+    </div>
+  </div>
+
+  <div class="tab-content" *ngIf="activeTab === 'layout'">
+    <div
+      *ngFor="let layout of availableLayouts"
+      class="control-chart-item layout-item"
+      draggable="true"
+      (dragstart)="startDrag(layout, $event)"
+    >
+      {{ layout.title }}
+    </div>
+
+    <!-- <div
+      class="control-chart-item layout-item"
+      draggable="true"
+      (dragstart)="startDrag({ title: 'Header', type: 'header' }, $event)"
+    >
+      Header
+    </div> -->
+  </div>
+</div>

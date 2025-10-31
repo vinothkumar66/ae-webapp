@@ -72,7 +72,7 @@
 
 .maincontent{
   margin-left: 60px;
-  padding: 20px;
+  padding: 10px;
   transition: margin-left 0.3s ease;
   background-color: var(--dx-component-color-bg);
 }

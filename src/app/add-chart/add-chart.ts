@@ -12,7 +12,8 @@ import {
   DxDropDownButtonModule,
   DxMenuModule,
   DxDropDownButtonComponent,
-  DxButtonModule
+  DxButtonModule,
+  DxPopupModule
 } from 'devextreme-angular';
 import { DxSortableTypes } from 'devextreme-angular/ui/sortable';
 import { ApiService } from '../services/api.service';
@@ -26,9 +27,8 @@ interface MenuItem {
 }
 
 type DxoItemDraggingProperties = DxSortableTypes.Properties;
-
 @Component({
-  selector: 'app-analytic-control-new',
+  selector: 'app-add-chart',
   imports: [
     DxTextBoxModule,
     DxTreeViewModule,
@@ -41,15 +41,15 @@ type DxoItemDraggingProperties = DxSortableTypes.Properties;
     DxListModule,
     DxDropDownButtonModule,
     DxMenuModule,
-    DxButtonModule
-  ],
-  templateUrl: './analytic-control-new.component.html',
-  styleUrl: './analytic-control-new.component.css'
+    DxButtonModule,
+    DxPopupModule
+  ],  templateUrl: './add-chart.html',
+  styleUrl: './add-chart.css'
 })
-export class AnalyticControlNewComponent {
-  @ViewChild('dropDownButton') dropDownButton!: DxDropDownButtonComponent;
+export class AddChart {
+@ViewChild('dropDownButton') dropDownButton!: DxDropDownButtonComponent;
 
-  existingData: any = JSON.parse(localStorage.getItem('AT_Properties') || '{}');
+  existingData: any = JSON.parse(localStorage.getItem('Dash_Prop') || '{}');
   currentCardId: string | null = null;
 
   formData: any = {
@@ -57,7 +57,7 @@ export class AnalyticControlNewComponent {
     analyticId: '',
     analyticType: '',
     chartType: '',
-    showControl: ['Chart'],
+    showControl: 'Chart',
     selectServer: null,
     servers: [],
     queryType: 'LastNN',
@@ -174,6 +174,11 @@ export class AnalyticControlNewComponent {
             id: s.serverid,
             name: s.servername
           }));
+
+          if (this.formData.servers.length > 0) {
+            this.formData.selectServer = this.formData.servers[0].id;
+            this.loadFieldLookups();
+          }
         } catch (e) {
           console.error('JSON parse error:', e);
         }
@@ -296,6 +301,108 @@ export class AnalyticControlNewComponent {
   blnTableOutput: boolean = false;
   blnrelativetime: boolean = false;
 
+  // ===== Popup form additions =====
+  isSavePopupVisible = false;
+
+  accessType = [
+    { name: 'Normal', value: 'N' },
+    { name: 'Exclusive', value: 'E' },
+    { name: 'Common', value: 'C' },
+  ];
+
+  mapTypes = ['Enterprise', 'Site', 'Plant', 'Area', 'Unit'];
+
+  popupData: any = {
+    accessType: 'N',
+    refreshRate: 0,
+    mapType: 'Enterprise',
+    enterpriseId: null,
+    siteId: null,
+    plantId: null,
+    areaId: null,
+    unitId: null,
+  };
+
+  enterprises = [];
+  sites = [];
+  plants = [];
+  areas = [];
+  units = [];
+
+  openSavePopup() {
+    this.isSavePopupVisible = true;
+
+    this.apiService.GetUserEnterprises().subscribe({
+      next: (res: any) => {
+        this.enterprises = JSON.parse(res)
+      },
+      error: (err) => console.error('SaveAEPage error', err)
+    });
+  }
+
+  onMapTypeChanged(e: any) {
+    this.popupData.mapType = e.value;
+    this.popupData.siteId = null;
+    this.popupData.plantId = null;
+    this.popupData.areaId = null;
+    this.popupData.unitId = null;
+  }
+
+  onEnterpriseChanged(e: any) {
+    this.popupData.enterpriseId = e.value;
+
+    this.apiService.GetSitesByEnterpriseId(e.value).subscribe({
+      next: (res: any) => {
+        this.sites = JSON.parse(res);
+      },
+      error: (err) => console.error('SaveAEPage error', err)
+    });
+
+    this.plants = [];
+    this.areas = [];
+    this.units = [];
+  }
+
+  onSiteChanged(e: any) {
+    this.popupData.siteId = e.value;
+
+    this.apiService.GetPlantsBySiteId(e.value).subscribe({
+      next: (res: any) => {
+        this.plants = JSON.parse(res);
+      },
+      error: (err) => console.error('SaveAEPage error', err)
+    });
+    this.areas = [];
+    this.units = [];
+  }
+
+  onPlantChanged(e: any) {
+    this.popupData.plantId = e.value;
+    this.apiService.GetAreasByPlantId(e.value).subscribe({
+      next: (res: any) => {
+        this.areas = JSON.parse(res);
+      },
+      error: (err) => console.error('SaveAEPage error', err)
+    });
+    this.units = [];
+  }
+
+  onAreaChanged(e: any) {
+    this.popupData.areaId = e.value;
+    this.apiService.GetUnitsByAreaId(e.value).subscribe({
+      next: (res: any) => {
+        this.units = JSON.parse(res);
+      },
+      error: (err) => console.error('SaveAEPage error', err)
+    });
+  }
+
+  confirmSave() {
+    this.isSavePopupVisible = false;
+
+    this.saveControl();
+  }
+
   saveControl() {
     let fromDate = formatDate(this.formData.fromDate, 'yyyy-MM-dd HH:mm', 'en-US');
     let toDate = formatDate(this.formData.toDate, 'yyyy-MM-dd HH:mm', 'en-US');
@@ -344,7 +451,7 @@ export class AnalyticControlNewComponent {
 
         dataFromApiObj.WindowDetails = this.formData;
 
-        const existing = JSON.parse(localStorage.getItem("AT_Properties") || '{}');
+        const existing = JSON.parse(localStorage.getItem("Dash_Prop") || '{}');
 
         const updatedStorage = {
           ...existing,
@@ -365,8 +472,55 @@ export class AnalyticControlNewComponent {
           });
         }
 
-        localStorage.setItem("AT_Properties", JSON.stringify(updatedStorage));
-        this.router.navigate([`analytic-new`]);
+        var dash = updatedStorage.WindowGroups[0].WindowDetails.WindowDetails;
+
+        localStorage.setItem("Dash_Prop", JSON.stringify(updatedStorage));
+        var user: any = localStorage.getItem("user_details");
+        user = JSON.parse(user)
+        const { enterpriseId, siteId, plantId, areaId, unitId } = this.popupData;
+
+        const pagePayload: any = {
+          PageName: dash.analyticTitle,
+          RefreshRate: "0",
+          PageAccessType: "N",
+          MapType: "E", 
+          PageType: "C",
+          PageProperties: JSON.stringify(dash),
+          UserId: user.UserId,
+          EnterpriseId: enterpriseId ?? null,
+          SiteId: siteId ?? null,
+          PlantId: plantId ?? null,
+          AreaId: areaId ?? null,
+          UnitId: unitId ?? null,
+        };
+
+        if (unitId) {
+          pagePayload.MappingId = unitId;
+          pagePayload.MapType = "U";
+        } else if (areaId) {
+          pagePayload.MappingId = areaId;
+          pagePayload.MapType = "A";
+        } else if (plantId) {
+          pagePayload.MappingId = plantId;
+          pagePayload.MapType = "P";
+        } else if (siteId) {
+          pagePayload.MappingId = siteId;
+          pagePayload.MapType = "S";
+        } else if (enterpriseId) {
+          pagePayload.MappingId = enterpriseId;
+          pagePayload.MapType = "E";
+        } else {
+          pagePayload.MappingId = null;
+        }
+
+        console.log(pagePayload);
+
+        this.apiService.SaveAEPage(pagePayload).subscribe({
+          next: () => {
+             this.router.navigate([`dashboard`]);
+          },
+          error: (err) => console.error('SaveAEPage error', err)
+        });
       }
     });
 

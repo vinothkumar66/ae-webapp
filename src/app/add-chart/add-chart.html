@@ -1,0 +1,281 @@
+<div class="button-container">
+  <dx-button
+    text="Save"
+    type="success"
+    (onClick)="openSavePopup()">
+  </dx-button>
+
+  <dx-button
+    text="Cancel"
+    (onClick)="cancelControl()">
+  </dx-button>
+</div>
+
+<div class="form-grid">
+  <div class="form-row">
+    <label>Analytic Title</label>
+    <dx-text-box [(value)]="formData.analyticTitle"></dx-text-box>
+  </div>
+
+  <div class="form-row">
+      <label>Show Datatable/Chart</label>
+      <dx-select-box
+          [items]="['Chart', 'Datatable']"
+          [(value)]="formData.showControl">
+      </dx-select-box>
+  </div>
+
+  <div class="form-row">
+      <label>Analytic Type</label>
+      <br>
+      <dx-drop-down-button
+        #dropDownButton
+        [text]="dropdownText" 
+      >
+        <dx-menu *dxTemplate="let data of 'content'" [items]="menuItems" orientation="vertical"></dx-menu>
+      </dx-drop-down-button>
+  </div>
+  
+  <div class="form-row">
+      <label>Chart Type</label>
+      <dx-select-box
+      [items]="chartTypes"
+      [(value)]="formData.chartType">
+    </dx-select-box>
+  </div>
+
+  <div class="form-row">
+    <label>Select Server</label>
+    <dx-select-box
+      [items]="formData.servers"
+      [value]="formData.selectServer"
+      displayExpr="name"
+      (onValueChanged)="onServerValueChanged($event)"
+      valueExpr="id">
+    </dx-select-box>
+  </div>
+
+  <div class="form-row">
+    <label>Query Type</label>
+    <dx-select-box
+      [items]="queryTypes"
+      [(value)]="formData.queryType">
+    </dx-select-box>
+  </div>
+
+  <div class="form-row" [ngClass]="{ 'hidden': formData.queryType !== 'LastNN' }">
+    <label>Last N Value</label>
+    <dx-number-box [(value)]="formData.lastNValue"></dx-number-box>
+  </div>
+
+  <div class="form-row" [ngClass]="{ 'hidden': formData.queryType !== 'LastNN' }">
+    <label>Relative Time / Auto Update</label>
+    <dx-tag-box 
+      [items]="['Relative Time', 'Auto Update']"
+      [(value)]="formData.relativeTime"
+      [showSelectionControls]="true"
+      multiselect="true">
+    </dx-tag-box>
+  </div>
+
+  <div class="form-row"  [ngClass]="{ 'hidden': formData.queryType !== 'LastNN' || !formData.relativeTime.includes('Relative Time') }">
+      <label>Auto Update (Update Rate in Mins)</label>
+      <dx-number-box [(value)]="formData.autoUpdate"></dx-number-box>
+    </div>
+    
+    <div class="form-row"  [ngClass]="{ 'hidden': formData.queryType !== 'LastNN' || !formData.relativeTime.includes('Auto Update') }">
+      <label>Time Picker</label>
+      <dx-date-box
+        type="time"
+        [(value)]="formData.timePicker"
+        displayFormat="HH:mm">
+      </dx-date-box>
+    </div>
+
+  <div class="form-row" [ngClass]="{ 'hidden': formData.queryType !== 'Range' }">
+    <label>From Date</label>
+    <dx-date-box
+      type="datetime"
+      [(value)]="formData.fromDate"
+      displayFormat="dd-MMM-yyyy HH:mm:00">
+    </dx-date-box>
+  </div>
+
+  <div class="form-row" [ngClass]="{ 'hidden': formData.queryType !== 'Range' }">
+    <label>To Date</label>
+    <dx-date-box
+      type="datetime"
+      [(value)]="formData.toDate"
+      displayFormat="dd-MMM-yyyy HH:mm:00">
+    </dx-date-box>
+  </div>
+
+  <div class="form-row">
+      <span>Add Conditions</span>
+        <dx-filter-builder
+          [(value)]="filterValue"
+          [fields]="filterFields"
+          [allowHierarchicalFields]="true"
+          [groupOperations]="['and', 'or']">
+        </dx-filter-builder>
+  </div>
+
+  <div class="results form-row">
+      <b>Final Query</b>
+      <pre>{{ formData.fields }}</pre>
+   </div>
+
+  <div class="form-row">
+    <span>Available Fields</span>
+    <dx-list [dataSource]="this.formData.displayFields" keyExpr="id" height="400">
+        <dxo-item-dragging
+        group="tasks"
+        [data]="displayFields"
+        [allowReordering]="true"
+        [onDragStart]="onDragStart"
+        [onAdd]="onAdd"
+        [onRemove]="onRemove"
+        [onReorder]="onReorder">
+        </dxo-item-dragging>
+    </dx-list>
+  </div>
+
+  <div class="form-row">
+    <span>Selected Fields</span>
+    <dx-list [dataSource]="this.formData.defaultFields" keyExpr="id" height="400">
+        <dxo-item-dragging
+        group="tasks"
+        [data]="defaultFields"
+        [allowReordering]="true"
+        [onDragStart]="onDragStart"
+        [onAdd]="onAdd"
+        [onRemove]="onRemove"
+        [onReorder]="onReorder">
+        </dxo-item-dragging>
+    </dx-list>
+  </div>
+</div>
+
+<!-- Save confirmation popup -->
+<dx-popup
+  [(visible)]="isSavePopupVisible"
+  [width]="800"
+  [height]="'auto'"
+  [showTitle]="true"
+  title="Save Settings"
+  [dragEnabled]="true"
+  [hideOnOutsideClick]="true">
+
+  <div *dxTemplate="let data of 'content'">
+    <div class="popup-form">
+
+      <div class="popup-row">
+        <div class="">
+          <label>Access Type</label>
+          <dx-select-box
+            [items]="accessType"
+            displayExpr="name"
+            valueExpr="value"
+            [(value)]="popupData.accessType">
+          </dx-select-box>
+        </div>
+
+        <div class="">
+          <label>Refresh Rate (mins)</label>
+          <dx-number-box
+            [(value)]="popupData.refreshRate"
+            [min]="0"
+            [showSpinButtons]="true">
+          </dx-number-box>
+        </div>
+      </div>
+
+      <div class="popup-row">
+        <div class="">
+          <label>Map Type</label>
+          <dx-select-box
+            [items]="mapTypes"
+            [(value)]="popupData.mapType"
+            (onValueChanged)="onMapTypeChanged($event)">
+          </dx-select-box>
+        </div>
+
+        <!-- Enterprise -->
+        <div class="" *ngIf="popupData.mapType">
+          <label>Enterprise</label>
+          <dx-select-box
+            [items]="enterprises"
+            displayExpr="EnterPriseName"
+            valueExpr="EnterpriseID"
+            [(value)]="popupData.enterpriseId"
+            (onValueChanged)="onEnterpriseChanged($event)">
+          </dx-select-box>
+        </div>
+      </div>
+
+      <div class="popup-row">
+        <!-- Site -->
+        <div class="" *ngIf="['Site','Plant','Area','Unit'].includes(popupData.mapType)">
+          <label>Site</label>
+          <dx-select-box
+            [items]="sites"
+            displayExpr="SiteName"
+            valueExpr="SiteId"
+            [(value)]="popupData.siteId"
+            (onValueChanged)="onSiteChanged($event)">
+          </dx-select-box>
+        </div>
+
+        <!-- Plant -->
+        <div class="" *ngIf="['Plant','Area','Unit'].includes(popupData.mapType)">
+          <label>Plant</label>
+          <dx-select-box
+            [items]="plants"
+            displayExpr="PlantName"
+            valueExpr="PlantId"
+            [(value)]="popupData.plantId"
+            (onValueChanged)="onPlantChanged($event)">
+          </dx-select-box>
+        </div>
+      </div>
+
+      <div class="popup-row">
+        <!-- Area -->
+        <div class="" *ngIf="['Area','Unit'].includes(popupData.mapType)">
+          <label>Area</label>
+          <dx-select-box
+            [items]="areas"
+            displayExpr="AreaName"
+            valueExpr="AreaId"
+            [(value)]="popupData.areaId"
+            (onValueChanged)="onAreaChanged($event)">
+          </dx-select-box>
+        </div>
+
+        <!-- Unit -->
+        <div class="" *ngIf="popupData.mapType === 'Unit'">
+          <label>Unit</label>
+          <dx-select-box
+            [items]="units"
+            displayExpr="UnitName"
+            valueExpr="UnitId"
+            [(value)]="popupData.unitId">
+          </dx-select-box>
+        </div>
+      </div>
+
+      <div class="popup-actions">
+        <dx-button
+          text="Confirm"
+          type="success"
+          (onClick)="confirmSave()">
+        </dx-button>
+
+        <dx-button
+          text="Cancel"
+          (onClick)="isSavePopupVisible = false">
+        </dx-button>
+      </div>
+    </div>
+  </div>
+</dx-popup>

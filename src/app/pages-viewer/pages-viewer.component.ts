@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { DxButtonModule, DxDataGridModule } from 'devextreme-angular';
+import { DxButtonModule, DxDataGridModule, DxTabPanelModule } from 'devextreme-angular';
 import { ApiService } from '../services/api.service';
 import { Router } from '@angular/router';
 import notify from 'devextreme/ui/notify';
@@ -11,15 +11,26 @@ import notify from 'devextreme/ui/notify';
   imports: [
     DxDataGridModule,
     CommonModule,
-    DxButtonModule
+    DxButtonModule,
+    DxTabPanelModule
   ],
   templateUrl: './pages-viewer.component.html',
   styleUrl: './pages-viewer.component.css'
 })
 export class PagesViewerComponent {
   dataList: any[] = [];
+  dashboardList: any[] = [];
+  controlList: any[] = [];
+  pagesList: any[] = [];
+  defaultDashboardId: any;
+  
   QuickAccessList: any[] = [];
   defaultPageId: any;
+  tabs = [
+    { title: 'Pages' },
+    { title: 'Controls' },
+    { title: 'Dashboards' }
+  ];
 
   constructor(private apiService: ApiService, public router: Router) {}
 
@@ -27,12 +38,19 @@ export class PagesViewerComponent {
     this.getAllPages();
     this.getQuickAccessPages();
     this.getDefaultPage();
+    this.getDefaultDashboard();
   }
 
-  getAllPages() {
+   getAllPages() {
     this.apiService.getAllPages().subscribe({
       next: (dataFromApi: any) => {
-        this.dataList = JSON.parse(dataFromApi);
+        const parsed = JSON.parse(dataFromApi);
+        this.dataList = parsed;
+        this.dashboardList = parsed.filter((p: any) => p.pagetype?.toLowerCase() === 'dashboard');
+        this.controlList = parsed.filter((p: any) => p.pagetype?.toLowerCase() === 'control');
+        this.pagesList = parsed.filter(
+          (p: any) => p.pagetype?.toLowerCase() !== 'dashboard' && p.pagetype?.toLowerCase() !== 'control'
+        );
       },
       error: (err) => {
         console.error('Failed to fetch pages:', err);
@@ -102,6 +120,42 @@ export class PagesViewerComponent {
         console.error('Failed to set default page:', err);
       }
     });
+  }
+
+  getDefaultDashboard() {
+    // this.apiService.getDefaultDashboard().subscribe({
+    //   next: (dataFromApi: any) => {
+    //     const parsed = JSON.parse(dataFromApi);
+    //     this.defaultDashboardId = parsed?.DashboardId || null;
+    //   },
+    //   error: (err) => console.error('Failed to fetch default dashboard:', err)
+    // });
+  }
+
+  setDefaultDashboard(dashboardId: number) {
+    // this.apiService.addDefaultDashboard(dashboardId).subscribe({
+    //   next: () => {
+    //     this.defaultDashboardId = dashboardId;
+    //     notify('Dashboard set as Default', 'success', 2000);
+    //   },
+    //   error: (err) => {
+    //     console.error('Failed to set default dashboard:', err);
+    //     notify('Failed to set Default Dashboard', 'error', 2000);
+    //   }
+    // });
+  }
+
+   removeDefaultDashboard() {
+    // if (this.defaultDashboardId === null) return;
+    //  this.apiService.deleteDefaultDashboard(this.defaultDashboardId).subscribe({
+    //   next: () => {
+    //     this.defaultDashboardId = null;
+    //     notify('Default Dashboard removed', 'warning', 2000);
+    //   },
+    //   error: (err) => {
+    //     console.error('Failed to remove default dashboard:', err);
+    //   }
+    // });
   }
 
   removeDefaultPage() {
