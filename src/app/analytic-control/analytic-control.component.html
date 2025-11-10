@@ -80,12 +80,12 @@
     </dx-tag-box>
   </div>
 
-  <div class="form-row"  [ngClass]="{ 'hidden': formData.queryType !== 'LastNN' || !formData.relativeTime.includes('Relative Time') }">
+  <div class="form-row"  [ngClass]="{ 'hidden': formData.queryType !== 'LastNN' || !formData.relativeTime.includes('Auto Update') }">
       <label>Auto Update (Update Rate in Mins)</label>
       <dx-number-box [(value)]="formData.autoUpdate"></dx-number-box>
     </div>
     
-    <div class="form-row"  [ngClass]="{ 'hidden': formData.queryType !== 'LastNN' || !formData.relativeTime.includes('Auto Update') }">
+    <div class="form-row"  [ngClass]="{ 'hidden': formData.queryType !== 'LastNN' || !formData.relativeTime.includes('Relative Time') }">
       <label>Time Picker</label>
       <dx-date-box
         type="time"

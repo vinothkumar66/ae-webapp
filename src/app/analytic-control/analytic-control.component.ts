@@ -130,7 +130,7 @@ export class AnalyticControlComponent {
     this.getServers();
     this.getAnalysis();
 
-    console.log(this.existingData.WindowDetails)
+    console.log(this.existingData.WindowDetails);
   }
 
   constructor(
@@ -228,6 +228,9 @@ export class AnalyticControlComponent {
 
           this.formData.displayFields = displayFields;
           this.formData.defaultFields = defaultFields;
+
+          this.filterValue = [];
+          this.loadFieldLookups();
         } catch (e) {
           console.error('Field parsing error:', e);
         }
@@ -321,14 +324,17 @@ export class AnalyticControlComponent {
       "relativetime": timePicker
     }
 
-    console.log(data);
-
     this.apiService.GetAnalyticData(data).subscribe({
       next: (dataFromApi: any) => {
         let dataFromApiObj = JSON.parse(dataFromApi);
-
         dataFromApiObj.WindowDetails = this.formData;
-        localStorage.setItem("Analysis", JSON.stringify(dataFromApiObj));
+
+        const dataToSave = {
+          WindowDetails: this.formData,
+          AnalysisData: dataFromApiObj
+        };
+
+        localStorage.setItem("Analysis", JSON.stringify(dataToSave));
 
         this.route.navigate([`analytic/${this.selectedAnalysisId}`]);
       }

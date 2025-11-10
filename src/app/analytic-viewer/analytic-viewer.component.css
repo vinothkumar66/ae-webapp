@@ -82,3 +82,11 @@
 .AlmDash-Content span {
   color: var(--dx-color-icon);
 }
+
+.row {
+  display: flex;
+}
+
+.col {
+  width: 45vw;
+}

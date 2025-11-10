@@ -248,6 +248,9 @@ export class AnalyticControlNewComponent {
 
           this.formData.displayFields = displayFields;
           this.formData.defaultFields = defaultFields;
+
+          this.filterValue = [];
+          this.loadFieldLookups();
         } catch (e) {
           console.error('Field parsing error:', e);
         }

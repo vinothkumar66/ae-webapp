@@ -15,7 +15,7 @@
   
   .dx-card-actions dx-button {
     margin-left: 8px;
-  }
+  } 
     
   .card-container {
     display: flex;
@@ -30,3 +30,22 @@
     top: 0;
     z-index: 1000;
   }
+
+.popup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 10px;
+}
+
+.popup-row {
+  display: flex;
+  gap: 20px;
+}
+
+.popup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+}

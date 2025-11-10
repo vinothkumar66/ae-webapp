@@ -118,6 +118,9 @@ export class ExportDataComponent implements OnInit {
 
           // Optionally assign basic fields without lookups to display immediately
           this.filterFields = [...this.storedFieldConfigs];
+
+          // this.filterValue = [];
+          // this.loadFieldLookups();
         } catch (e) {
           console.error('Field parsing error:', e);
         }
@@ -129,6 +132,8 @@ export class ExportDataComponent implements OnInit {
   } 
   
   loadFieldLookups(){
+    console.log("fields", this.storedFieldConfigs)
+
     this.storedFieldConfigs.forEach((fieldConfig: any) => {
       const fieldName = fieldConfig.dataField;
 

@@ -44,6 +44,7 @@ export const routes: Routes = [
       { path: 'analytic-control-new/:id', component: AnalyticControlNewComponent },
       { path: 'analytic-new', component: AnalyticViewerNewComponent },
       { path: 'dashboard', component: Dashboard },
+      { path: 'dashboard/:id', component: Dashboard },
       { path: 'add-chart', component: AddChart },
     ]
   }

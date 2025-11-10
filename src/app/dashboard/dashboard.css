@@ -4,6 +4,13 @@
   flex-direction: row;
 }
 
+.nodash {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
 .main-content {
   flex: 1;
   background-color: var(--dx-color-bg);
@@ -40,7 +47,7 @@
 }
 
 .row-widget {
-  border: 2px dotted var(--dx-color-border);
+  /* border: 2px dotted var(--dx-color-border); */
   background: var(--dx-color-bg);
   box-sizing: border-box;
   display: flex;
@@ -51,7 +58,7 @@
 }
 
 .row-widget:hover {
-  border-color: var(--dx-color-bg);
+  border: 2px dotted var(--dx-color-bg);
   background-color: var(--dx-color-bg-hover);
 }
 
@@ -124,7 +131,7 @@
 }
 
 .col-widget {
-  border: 2px dotted var(--dx-color-border);
+  /* border: 2px dotted var(--dx-color-border); */
   height: 100%;
   box-sizing: border-box;
   background: var(--dx-color-bg);
@@ -144,7 +151,7 @@
   justify-content: center;
   font-style: italic;
   color: var(--dx-color-text-light);
-  background-color: var(--dx-color-bg-hover);
+  background-color: var(--dx-color-bg);
 }
 
 /* --- Chart Widget with Header --- */
@@ -202,8 +209,8 @@
   flex-direction: column;
 }
 
-/* --- Card Body --- */
-.card-body {
+/* --- Chart Body --- */
+.chart-body {
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -214,7 +221,7 @@
   scrollbar-width: none;
 }
 
-.card-body::-webkit-scrollbar {
+.chart-body::-webkit-scrollbar {
   display: none;
 }
 
@@ -223,7 +230,11 @@ dx-chart {
 }
 
 gridster {
-  background-color: white !important;
+  background-color: var(--dx-color-bg) !important;
+}
+
+gridster-item{
+  background-color: var(--dx-color-bg) !important;
 }
 
 .dx-datagrid {
@@ -364,4 +375,62 @@ dx-data-grid {
   font-size: 22px;
   font-weight: bold;
   color: var(--dx-color-text);
+}
+
+.popup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 10px;
+}
+
+.popup-row {
+  display: flex;
+  gap: 20px;
+}
+
+.popup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  text-align: center;
+  background: var(--dx-color-bg);
+  border: 1px solid var(--dx-color-border);
+}
+
+.cards {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  width: 100%;
+}
+
+.card-value {
+  font-size: 2.3em;
+  font-weight: 500;
+  color: #575757;
+  margin-bottom: 8px;
+}
+
+.card-label {
+  font-size: 1.15em;
+  color: #919191;
+}
+
+.row {
+  display: flex;
+}
+
+.col {
+  width: 45vw;
 }

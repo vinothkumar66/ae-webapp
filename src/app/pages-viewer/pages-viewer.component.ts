@@ -8,12 +8,7 @@ import notify from 'devextreme/ui/notify';
 @Component({
   selector: 'app-pages-viewer',
   standalone: true,
-  imports: [
-    DxDataGridModule,
-    CommonModule,
-    DxButtonModule,
-    DxTabPanelModule
-  ],
+  imports: [DxDataGridModule, CommonModule, DxButtonModule, DxTabPanelModule],
   templateUrl: './pages-viewer.component.html',
   styleUrl: './pages-viewer.component.css'
 })
@@ -22,9 +17,8 @@ export class PagesViewerComponent {
   dashboardList: any[] = [];
   controlList: any[] = [];
   pagesList: any[] = [];
-  defaultDashboardId: any;
-  
   QuickAccessList: any[] = [];
+
   defaultPageId: any;
   tabs = [
     { title: 'Pages' },
@@ -38,10 +32,9 @@ export class PagesViewerComponent {
     this.getAllPages();
     this.getQuickAccessPages();
     this.getDefaultPage();
-    this.getDefaultDashboard();
   }
 
-   getAllPages() {
+  getAllPages() {
     this.apiService.getAllPages().subscribe({
       next: (dataFromApi: any) => {
         const parsed = JSON.parse(dataFromApi);
@@ -52,9 +45,7 @@ export class PagesViewerComponent {
           (p: any) => p.pagetype?.toLowerCase() !== 'dashboard' && p.pagetype?.toLowerCase() !== 'control'
         );
       },
-      error: (err) => {
-        console.error('Failed to fetch pages:', err);
-      }
+      error: (err) => console.error('Failed to fetch pages:', err)
     });
   }
 
@@ -63,21 +54,41 @@ export class PagesViewerComponent {
       next: (dataFromApi: any) => {
         this.QuickAccessList = JSON.parse(dataFromApi);
       },
-      error: (err) => {
-        console.error('Failed to fetch Quick Access pages:', err);
-      }
+      error: (err) => console.error('Failed to fetch Quick Access pages:', err)
     });
   }
 
   getDefaultPage() {
     this.apiService.getDefaultPage().subscribe({
       next: (dataFromApi: any) => {
-        dataFromApi = JSON.parse(dataFromApi);
-        this.defaultPageId = dataFromApi?.AIMSPageId || null;
+        const parsed = JSON.parse(dataFromApi);
+        this.defaultPageId = parsed?.AIMSPageId || null;
+      },
+      error: (err) => console.error('Failed to fetch default page:', err)
+    });
+  }
+
+  setDefault(pageId: number) {
+    this.apiService.addDefaultPage(pageId).subscribe({
+      next: () => {
+        this.defaultPageId = pageId;
+        notify('Set as Default successfully', 'success', 2000);
       },
       error: (err) => {
-        console.error('Failed to fetch default page:', err);
+        console.error('Failed to set default:', err);
+        notify('Failed to set Default', 'error', 2000);
       }
+    });
+  }
+
+  removeDefault() {
+    if (!this.defaultPageId) return;
+    this.apiService.deleteDefaultPage(this.defaultPageId).subscribe({
+      next: () => {
+        this.defaultPageId = null;
+        notify('Default removed', 'warning', 2000);
+      },
+      error: (err) => console.error('Failed to remove default:', err)
     });
   }
 
@@ -93,9 +104,7 @@ export class PagesViewerComponent {
           notify('Removed from Quick Access', 'warning', 2000);
           this.getQuickAccessPages();
         },
-        error: (err) => {
-          console.error('Failed to remove Quick Access:', err);
-        }
+        error: (err) => console.error('Failed to remove Quick Access:', err)
       });
     } else {
       this.apiService.addQuickAccessPage(pageid).subscribe({
@@ -103,72 +112,9 @@ export class PagesViewerComponent {
           notify('Added to Quick Access', 'success', 2000);
           this.getQuickAccessPages();
         },
-        error: (err) => {
-          console.error('Failed to add to Quick Access:', err);
-        }
+        error: (err) => console.error('Failed to add Quick Access:', err)
       });
     }
-  }
-
-  setDefaultPage(pageId: number) {
-    this.apiService.addDefaultPage(pageId).subscribe({
-      next: () => {
-        this.defaultPageId = pageId;
-        notify('Page set as Default', 'success', 2000);
-      },
-      error: (err) => {
-        console.error('Failed to set default page:', err);
-      }
-    });
-  }
-
-  getDefaultDashboard() {
-    // this.apiService.getDefaultDashboard().subscribe({
-    //   next: (dataFromApi: any) => {
-    //     const parsed = JSON.parse(dataFromApi);
-    //     this.defaultDashboardId = parsed?.DashboardId || null;
-    //   },
-    //   error: (err) => console.error('Failed to fetch default dashboard:', err)
-    // });
-  }
-
-  setDefaultDashboard(dashboardId: number) {
-    // this.apiService.addDefaultDashboard(dashboardId).subscribe({
-    //   next: () => {
-    //     this.defaultDashboardId = dashboardId;
-    //     notify('Dashboard set as Default', 'success', 2000);
-    //   },
-    //   error: (err) => {
-    //     console.error('Failed to set default dashboard:', err);
-    //     notify('Failed to set Default Dashboard', 'error', 2000);
-    //   }
-    // });
-  }
-
-   removeDefaultDashboard() {
-    // if (this.defaultDashboardId === null) return;
-    //  this.apiService.deleteDefaultDashboard(this.defaultDashboardId).subscribe({
-    //   next: () => {
-    //     this.defaultDashboardId = null;
-    //     notify('Default Dashboard removed', 'warning', 2000);
-    //   },
-    //   error: (err) => {
-    //     console.error('Failed to remove default dashboard:', err);
-    //   }
-    // });
-  }
-
-  removeDefaultPage() {
-    if (this.defaultPageId === null) return;
-    this.apiService.deleteDefaultPage(this.defaultPageId).subscribe({
-      next: () => {
-        this.defaultPageId = null;
-        notify('Default page removed', 'warning', 2000);
-      },
-      error: (err) => {
-        console.error('Failed to remove default page:', err);
-      }
-    });
   }
 
   onDeleteRow(event: any) {
@@ -176,34 +122,36 @@ export class PagesViewerComponent {
     this.deletePage(pageId);
   }
 
+  onDeleteDashboardRow(event: any) {
+    const dashboardId = event.data.pageid;
+    this.deletePage(dashboardId);
+  }
+
   deletePage(pageid: any) {
     this.apiService.deletePage(pageid).subscribe({
       next: () => {
-        this.dataList = this.dataList.filter(page => page.pageid !== pageid);
+        this.dataList = this.dataList.filter(p => p.pageid !== pageid);
+        this.dashboardList = this.dashboardList.filter(p => p.pageid !== pageid);
+        this.pagesList = this.pagesList.filter(p => p.pageid !== pageid);
+        notify('Deleted successfully', 'warning', 2000);
       },
+      error: (err) => console.error('Failed to delete page:', err)
     });
   }
 
   onRowUpdated(event: any) {
     const updatedData = event.data;
     console.log(updatedData);
-    // this.apiService.UpdateAEPage(updatedData).subscribe({
-    //   next: () => {
-    //     notify('Page updated successfully', 'success', 2000);
-    //   },
-    //   error: (err: any) => {
-    //     console.error('Failed to update page:', err);
-    //     notify('Update failed', 'error', 2000);
-    //   }
-    // });
-  }  
+    // Call API if update needed
+  }
 
-  navigateToPage(page: any, navigate: string) {
-    const pageUrl = `analytic`;
-    if (navigate === 'blank') {
-      window.open(pageUrl, '_blank');
-    } else {
-      this.router.navigate(['analytic']);
-    }
+  navigateToPage(page: any, mode: string) {
+    const url = `analytic/${page.pageid}`;
+    mode === 'blank' ? window.open(url, '_blank') : this.router.navigate([url]);
+  }
+
+  navigateToDashboard(dashboard: any, mode: string) {
+    const url = `dashboard/${dashboard.pageid}`;
+    mode === 'blank' ? window.open(url, '_blank') : this.router.navigate([url]);
   }
 }

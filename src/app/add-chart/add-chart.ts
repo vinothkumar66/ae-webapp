@@ -122,7 +122,7 @@ export class AddChart {
         this.selectedAnalysisId = this.formData.analyticId || null;
 
         this.displayFields = this.formData.displayFields;
-          this.defaultFields = this.formData.defaultFields;
+        this.defaultFields = this.formData.defaultFields;
 
         try {
           this.filterValue = this.formData.fields ? JSON.parse(this.formData.fields) : [];
@@ -177,6 +177,7 @@ export class AddChart {
 
           if (this.formData.servers.length > 0) {
             this.formData.selectServer = this.formData.servers[0].id;
+            console.log(this.formData.selectServer);
             this.loadFieldLookups();
           }
         } catch (e) {
@@ -253,6 +254,9 @@ export class AddChart {
 
           this.formData.displayFields = displayFields;
           this.formData.defaultFields = defaultFields;
+
+          this.filterValue = [];
+          this.loadFieldLookups();
         } catch (e) {
           console.error('Field parsing error:', e);
         }
@@ -465,7 +469,7 @@ export class AddChart {
             windowCardId,
             WindowDetails: dataFromApiObj
           };
-        } else {
+        } else {  
           updatedStorage.WindowGroups.push({
             windowCardId,
             WindowDetails: dataFromApiObj
@@ -476,7 +480,7 @@ export class AddChart {
 
         localStorage.setItem("Dash_Prop", JSON.stringify(updatedStorage));
         var user: any = localStorage.getItem("user_details");
-        user = JSON.parse(user)
+        user = JSON.parse(user);
         const { enterpriseId, siteId, plantId, areaId, unitId } = this.popupData;
 
         const pagePayload: any = {
@@ -499,7 +503,7 @@ export class AddChart {
           pagePayload.MapType = "U";
         } else if (areaId) {
           pagePayload.MappingId = areaId;
-          pagePayload.MapType = "A";
+          pagePayload.MapType = "A";  
         } else if (plantId) {
           pagePayload.MappingId = plantId;
           pagePayload.MapType = "P";

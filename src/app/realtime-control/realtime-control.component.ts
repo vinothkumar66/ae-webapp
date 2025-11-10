@@ -221,6 +221,9 @@ export class RealtimeControlComponent {
 
           this.formData.displayFields = this.displayFields;
           this.formData.defaultFields = this.defaultFields;
+
+          this.filterValue = [];
+          this.loadFieldLookups();
         } catch (e) {
           console.error('Field parsing error:', e);
         }
