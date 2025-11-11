@@ -46,7 +46,7 @@
 
       <div class="table-container"
         *ngIf="showTableOnly">
-        <dx-data-grid [dataSource]="tableData" [showBorders]="true" [rowAlternationEnabled]="true" [export]="{ enabled: true }">
+        <dx-data-grid [remoteOperations]="true" [columnWidth]="200" [dataSource]="tableData" [showBorders]="true" [rowAlternationEnabled]="true" [export]="{ enabled: true }">
           <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[5, 10, 'all']" [showInfo]="true" [showNavigationButtons]="true" [displayMode]="'full'"></dxo-pager>
           <dxo-paging [enabled]="true" [pageSize]="5"></dxo-paging>
           <dxo-search-panel [visible]="true" [highlightCaseSensitive]="true"></dxo-search-panel>
@@ -70,7 +70,6 @@
                   <dxi-series valueField="{{ area }}" name="{{ area }}" color="{{ getColor(area) }}"></dxi-series>
                 </ng-container>
               </ng-container>
-              
                 <dxo-common-series-settings
                   argumentField="date"
                   type="bar"
@@ -426,7 +425,7 @@
     </div>
 
     <div class="card-body" *ngIf="showId == 62">
-      <dx-data-grid
+      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
         [dataSource]="eeumaData"
         [showBorders]="true"
         [cellHintEnabled]="true"
@@ -443,7 +442,7 @@
         <dxi-column dataField="Col3" caption="Value" cssClass="center-header"></dxi-column>
       </dx-data-grid>
 
-      <dx-data-grid
+      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
         [dataSource]="eeumacalcu"
         [showBorders]="true"
         [cellHintEnabled]="true"
@@ -455,7 +454,7 @@
     </div>
 
     <div class="card-body" *ngIf="showId == 63">
-      <dx-data-grid
+      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
         [dataSource]="iecData"
         [showBorders]="true"
         [cellHintEnabled]="true"
@@ -495,7 +494,7 @@
     </div>
 
     <div class="card-body AlmDash" *ngIf="showId == 64">
-      <dx-data-grid
+      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
         [dataSource]="AlmDashboardData"
         [showBorders]="true"
         [cellHintEnabled]="true"
@@ -546,7 +545,7 @@
         <dxo-legend verticalAlignment="top" horizontalAlignment="center"></dxo-legend>
       </dx-chart>
 
-      <dx-data-grid
+      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
         [dataSource]="AlmsPerOprPositionTableData"
         [showBorders]="true"
         [cellHintEnabled]="true"
@@ -591,7 +590,7 @@
         </dxi-value-axis>
       </dx-chart>
 
-      <dx-data-grid
+      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
         [dataSource]="AlarmVsOperatorTableData"
         [showBorders]="true"
         [cellHintEnabled]="true"
@@ -613,7 +612,7 @@
 
       </dx-chart>
 
-      <dx-data-grid
+      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
         [dataSource]="ChatteringTableData"
         [showBorders]="true"
         [cellHintEnabled]="true"
@@ -654,7 +653,7 @@
         <dxo-legend verticalAlignment="top" horizontalAlignment="center"></dxo-legend>
       </dx-chart>
 
-      <dx-data-grid
+      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
         [dataSource]="FleedingTableData"
         [showBorders]="true"
         [cellHintEnabled]="true"
@@ -708,7 +707,7 @@
         <dxo-legend verticalAlignment="top" horizontalAlignment="center"></dxo-legend>
       </dx-chart>
 
-      <dx-data-grid
+      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
         [dataSource]="FloodTableData"
         [showBorders]="true"
         [cellHintEnabled]="true"
@@ -753,7 +752,7 @@
         <dxo-legend verticalAlignment="top" horizontalAlignment="center"></dxo-legend>
       </dx-chart>
     
-      <dx-data-grid
+      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
         [dataSource]="FrequencyTableData"
         [showBorders]="true"
         [cellHintEnabled]="true"
@@ -767,7 +766,7 @@
     </div>  
     
     <div class="card-body" *ngIf="showId == 77 || showId == 47 || showId == 45">
-      <dx-data-grid
+      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
         [dataSource]="SOETableData"
         [showBorders]="true"
         [cellHintEnabled]="true"
@@ -797,7 +796,7 @@
         <dxo-legend verticalAlignment="top" horizontalAlignment="center"></dxo-legend>
       </dx-chart>
 
-      <dx-data-grid
+      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
         [dataSource]="StandingACKTableData"
         [showBorders]="true"
         [cellHintEnabled]="true"

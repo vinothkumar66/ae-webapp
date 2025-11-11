@@ -49,9 +49,9 @@
 </div>
 
 <div class="dashboard-container">
-  <!-- <div *ngIf="isViewerMode" class="nodash">
-    <h6>No Dashboards</h6>
-  </div> -->
+  <div *ngIf="!dashboardItems?.length && isViewerMode" class="no-dashboard">
+    <h6>No Dashboard</h6>
+  </div>
 
   <div class="main-content" (drop)="dropChart($event)" (dragover)="allowDrop($event)">
     <div *ngIf="dashboardHeader" class="dashboard-header">
@@ -96,7 +96,7 @@
                       <span class="chart-title">{{ col.chartTitle?.pagename}}</span>
                     </ng-container>
                     <ng-template #emptyTitle>
-                      <span class="chart-title">Cards</span>
+                      <span class="chart-title">Card</span>
                     </ng-template>
                     <button *ngIf="!isViewerMode" class="delete-chart-btn" (click)="deleteCol(row, j)">
                       <i class="dx-icon dx-icon-close"></i>
@@ -391,7 +391,7 @@
                       </dx-data-grid>
                     </div>
 
-                      <div class="card-body" *ngIf="col.chartState.showId == '74'">
+                      <div class="chart-body" *ngIf="col.chartState.showId == '74'">
                       <div id="">
                         <div class="barchart">
                           <div class="row">
@@ -698,7 +698,7 @@
                       </div>
                     </div>
 
-                    <div class="card-body" *ngIf="col.chartState.showId == '75'">
+                    <div class="chart-body" *ngIf="col.chartState.showId == '75'">
                       <div class="dx-viewport">
                           <div class="kpicharts">
                             <ng-container
@@ -862,13 +862,13 @@
         {{ layout.title }}
       </div>
 
-      <div
+      <!-- <div
         class="control-chart-item layout-item"
         draggable="true"
         (dragstart)="startDrag({ title: 'Header', type: 'header' }, $event)"
       >
         Header
-      </div>
+      </div> -->
     </div>
 </div>
 

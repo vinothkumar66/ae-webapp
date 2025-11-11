@@ -24,6 +24,7 @@ export class AnalyticViewerComponent implements OnInit {
   cardTitle: string = '';
   analyticType: string = '';
   showId: any;
+  chartType: any;
   showChartOnly = false;
   showTableOnly = false;
   eeumaData: any[] = [];
@@ -42,6 +43,7 @@ export class AnalyticViewerComponent implements OnInit {
       this.analyticType = this.dataFromStorage.WindowDetails.analyticType || '';
       
       this.showId = this.dataFromStorage?.WindowDetails?.analyticId;
+      this.chartType = this.dataFromStorage?.WindowDetails?.chartType;
       const showControl = this.dataFromStorage?.WindowDetails?.showControl || [];
       this.showChartOnly = showControl.includes('Chart');
       this.showTableOnly = showControl.includes('Datatable');
@@ -58,6 +60,10 @@ export class AnalyticViewerComponent implements OnInit {
         this.chartData = chartConfig.data || [];
         this.chartSeries = chartConfig.series || [];
         this.chartAxis = chartConfig.axis || [];
+
+        if (this.chartSeries && this.chartSeries.length > 0 && this.chartType) {
+          this.chartSeries[0].type = this.chartType;
+        }
       }
 
       if (this.showId === "62") {

@@ -51,7 +51,7 @@ export class AnalyticViewerNewComponent implements OnInit {
           }
         };
 
-        const showId = details.WindowDetails.analyticId;
+        const showId = details.WindowDetails?.analyticId;
 
         const tooltip = {
           enabled: true,

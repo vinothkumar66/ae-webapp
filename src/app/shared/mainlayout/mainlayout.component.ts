@@ -23,7 +23,7 @@ export class MainlayoutComponent {
 
   footertoolbar = [
     {
-      location: 'before',
+      location: 'center',
       text: 'Copyright © 2025 Supra Controls Pvt Ltd. All rights reserved'
     }
   ];

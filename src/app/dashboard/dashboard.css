@@ -418,13 +418,13 @@ dx-data-grid {
 .card-value {
   font-size: 2.3em;
   font-weight: 500;
-  color: #575757;
+  color: var(--dx-color-success);
   margin-bottom: 8px;
 }
 
 .card-label {
   font-size: 1.15em;
-  color: #919191;
+  color: var(--dx-color-danger);
 }
 
 .row {
@@ -433,4 +433,13 @@ dx-data-grid {
 
 .col {
   width: 45vw;
+}
+
+.no-dashboard {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  font-size: 1.5em;
+  color: #555;
 }

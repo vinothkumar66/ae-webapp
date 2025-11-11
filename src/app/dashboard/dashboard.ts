@@ -29,6 +29,7 @@ export class Dashboard implements OnInit {
   draggedRowIndex: number | null = null;
   isViewerMode = true;
   dashboardHeader: { text: string } | null = null;
+  refreshIntervals: Map<string, any> = new Map();
 
   baseGridsterOptions: GridsterConfig = {
     draggable: { enabled: true, ignoreContent: true, dragHandleClass: 'chart-header' },
@@ -68,19 +69,24 @@ export class Dashboard implements OnInit {
     const saved = localStorage.getItem('savedDashboard');
     if (saved) {
       const parsed = JSON.parse(saved);
-      this.dashboardItems = parsed.rows || [];
-      this.dashboardHeader = parsed.header || null;
-      this.dashboardItems.forEach((row: any) => {
-        row.gridsterOptions = { ...this.baseGridsterOptions, ...row.gridsterOptions };
-        // ensure each column has necessary fields
-        row.columns = row.columns.map((col: any) => ({
-          ...col,
-          chartState: col.chartState || {},
-          chartTitle: col.chartTitle || '',
-        }));
+      this.dashboardHeader = parsed.header ?? null;
+      this.dashboardItems = parsed.rows;
+
+      this.dashboardItems.forEach(row => {
+        row.columns.forEach((col: any) => {
+          col.chartState = {
+            ...col.chartState,
+            chartType: col.chartState?.chartType || 'bar',
+          };
+          this.startRefreshTimerForColumn(col);
+        });
       });
+
+      this.refreshAllGridsters();
     }
+
   }
+  
   isSavePopupVisible = false;
 
   accessType = [
@@ -195,6 +201,85 @@ export class Dashboard implements OnInit {
     this.refreshAllGridsters();
   }
 
+  ngOnDestroy() {
+    this.refreshIntervals.forEach(timer => clearInterval(timer));
+    this.refreshIntervals.clear();
+  }
+
+  startRefreshTimerForColumn(col: any) {
+    const chartId = col.chartTitle || col.id || col.chartState?.showId || JSON.stringify(col); 
+    const refreshRate = col.chartTitle?.refreshrate;
+
+    if (this.refreshIntervals.has(chartId)) {
+      clearInterval(this.refreshIntervals.get(chartId));
+    }
+
+    if (refreshRate && refreshRate > 0) {
+      const intervalMs = refreshRate * 60 * 1000;
+
+      const timer = setInterval(() => {
+        this.refreshChartData(col);
+      }, intervalMs);
+
+      this.refreshIntervals.set(chartId, timer);
+    }
+  }
+
+  refreshChartData(col: any) {
+    const akk = col?.chartState.rawAkk || '{}';
+
+    let whereConditionFormatted = '';
+
+    try {
+      const parsed = JSON.parse(akk.fields);
+      if (Array.isArray(parsed) && parsed.length === 3) {
+        const [field, operator, value] = parsed;
+        whereConditionFormatted = `( ${field}${operator}'${value}' )`;
+      }
+    } catch (e) {
+      console.error('Invalid where condition format', e);
+    }
+
+    const apiPayload: any = {
+      analysistype: akk.analyticId,
+      fromtime: akk.fromDate,
+      totime: akk.toDate,
+      serverid: akk.selectServer,
+      wherecondition: akk.fields === "[]" ? '' : whereConditionFormatted || '',
+      displaycolums: akk.defaultFields?.join(',') || '',
+      blnOverTime: false,
+      durationtype: null,
+      blnchartoutput: akk.showControl === 'Chart',
+      blntableoutput: akk.showControl === 'Datatable',
+      daterangetype: akk.queryType,
+      lastnndays: akk.lastNValue?.toString() || '',
+      blnrelativetime: Array.isArray(akk.relativeTime) && akk.relativeTime.length > 0,
+      relativetime: akk.timePicker
+    };
+    
+    this.apiService.GetAnalyticData(apiPayload).subscribe({
+      next: (dataFromApi: any) => {
+        const flatData = JSON.parse(dataFromApi);
+
+        col.chartState.rawData = flatData;
+
+        if (flatData.charts && flatData.charts.length > 0) {
+          const chartConfig = flatData.charts[0];
+          col.chartState.chartData = chartConfig.data;
+          col.chartState.chartSeries = chartConfig.series;
+          col.chartState.chartAxis = chartConfig.axis;
+
+          if (col.chartState.chartSeries && col.chartState.chartSeries.length > 0) {
+            col.chartState.chartType = col.chartState.chartSeries[0].type;
+          }
+        }
+
+        this.refreshAllGridsters();
+      },
+      error: err => console.error('API error during chart refresh', err)
+    });
+  }
+
   goToAddChart() {
     this.router.navigate(['/add-chart']);
   }
@@ -221,7 +306,6 @@ export class Dashboard implements OnInit {
 
     if (dragged === 'Header' || this.draggedChart.type === 'header') {
       if (this.dashboardHeader) {
-        alert('Header already exists.');
         this.draggedChart = null;
         return;
       }
@@ -286,14 +370,84 @@ export class Dashboard implements OnInit {
       if (!targetCol.cards) targetCol.cards = [];
       targetCol.cards.push({
         type: dragged.type || 'card',
-        value: dragged.value || '23%',   
-        label: dragged.label || 'Metrics',
-        chartState: dragged.chartState
+        value: dragged.value || 'Value',   
+        label: dragged.label || 'Label',
       });
-
-      this.refreshAllGridsters();
     }    
     else if (targetCol && !targetCol.chartTitle) {
+      if(targetCol && targetCol.cards) {
+        targetCol.chartTitle = dragged;
+
+        this.apiService.getPageProperties(dragged.pageid ?? dragged.pageId ?? dragged.pageid).subscribe({
+          next: (dataFromApi: any) => {
+            const flatData = JSON.parse(dataFromApi);
+            const akk = JSON.parse(flatData.pageproperties || '{}');
+            console.log(akk);
+
+            let whereConditionFormatted = '';
+
+            try {
+              const parsed = JSON.parse(akk.fields);
+              if (Array.isArray(parsed) && parsed.length === 3) {
+                const [field, operator, value] = parsed;
+                whereConditionFormatted = `( ${field}${operator}'${value}' )`;
+                console.log(whereConditionFormatted);
+              }
+            } catch (e) {
+              console.error('Invalid where condition format', e);
+            }
+
+            // targetCol.chartState.showId = akk.analyticId;
+            // targetCol.chartState.rawAkk = akk;
+
+            const apiPayload: any = {
+              analysistype: akk.analyticId,
+              fromtime: akk.fromDate,
+              totime: akk.toDate,
+              serverid: akk.selectServer,
+              wherecondition: akk.fields === "[]" ? '' : whereConditionFormatted || '',
+              displaycolums: akk.defaultFields?.join(',') || '',
+              blnOverTime: false,
+              durationtype: null,
+              blnchartoutput: akk.showControl === 'Chart',
+              blntableoutput: akk.showControl === 'Datatable',
+              daterangetype: akk.queryType,
+              lastnndays: akk.lastNValue?.toString() || '',
+              blnrelativetime: Array.isArray(akk.relativeTime) && akk.relativeTime.length > 0,
+              relativetime: akk.timePicker
+            };
+
+            this.apiService.GetAnalyticData(apiPayload).subscribe({
+              next: (dataFromApi: any) => {
+                const flatData = JSON.parse(dataFromApi || '{}');
+                targetCol.chartState.rawData = flatData;
+
+                console.log(flatData.Table[0]);
+
+                targetCol.cards = [];
+
+                targetCol.cards.push({
+                  type: 'card',
+                  value: flatData.Table[0].totalcount,   
+                  label: flatData.Table[0].tagno,
+                });
+
+                console.log(targetCol);
+                this.refreshAllGridsters();
+              },
+              error: (err: any) => {
+                console.error('API error:', err);
+              }
+            });
+          },
+          error: (err: any) => {
+            console.error('API error:', err);
+          }
+        });
+        
+        return;
+      }
+      
       targetCol.chartTitle = dragged;
 
       const pageId = this.draggedChart.pageid ?? this.draggedChart.pageId ?? (this.draggedChart.pageIdLegacy ?? null);
@@ -343,20 +497,22 @@ export class Dashboard implements OnInit {
 
               targetCol.chartState.showChartOnly = akk.showControl?.includes('Chart');
               targetCol.chartState.showTableOnly = akk.showControl?.includes('Datatable') || akk.showControl?.includes('Datagrid') || akk.showControl?.includes('Table');
-
               const showId = String(akk.analyticId);
+              const chartType = akk.chartType;
 
-              if (showId === "55" || showId === "56") {
-                targetCol.chartState.tableData = flatData.Table || [];
-                if (targetCol.chartState.tableData.length > 0) {
-                  targetCol.chartState.tableColumns = Object.keys(targetCol.chartState.tableData[0]);
-                }
+              targetCol.chartState.tableData = flatData.Table || [];
+              if (targetCol.chartState.tableData.length > 0) {
+                targetCol.chartState.tableColumns = Object.keys(targetCol.chartState.tableData[0]);
+              }
 
-                if (flatData.charts && flatData.charts.length > 0) {
-                  const chartConfig = flatData.charts[0];
-                  targetCol.chartState.chartData = chartConfig.data || [];
-                  targetCol.chartState.chartSeries = chartConfig.series || [];
-                  targetCol.chartState.chartAxis = chartConfig.axis || [];
+              if (flatData.charts && flatData.charts.length > 0) {
+                const chartConfig = flatData.charts[0];
+                targetCol.chartState.chartData = chartConfig.data || [];
+                targetCol.chartState.chartSeries = chartConfig.series || [];
+                targetCol.chartState.chartAxis = chartConfig.axis || [];
+
+                if (targetCol.chartState.chartSeries && targetCol.chartState.chartSeries.length > 0 && chartType) {
+                  targetCol.chartState.chartSeries[0].type = chartType;
                 }
               }
 
@@ -539,7 +695,7 @@ export class Dashboard implements OnInit {
 
     const savedLayout = {
       header: this.dashboardHeader,
-      rows: this.dashboardItems.map((row) => ({
+      rows: this.dashboardItems.map(row => ({
         height: row.height,
         rows: row.rows,
         cols: row.cols,
@@ -549,12 +705,15 @@ export class Dashboard implements OnInit {
           cols: col.cols,
           rows: col.rows,
           chartTitle: col.chartTitle,
-          chartState: col.chartState,
+          chartState: {
+            ...col.chartState,
+            chartType: col.chartState?.chartType // explicitly save chartType
+          },
           x: col.x ?? 0,
           y: col.y ?? 0,
-        })),
-      })),
-    }; 
+        }))
+      }))
+    };
 
     console.log(this.popupData);
 

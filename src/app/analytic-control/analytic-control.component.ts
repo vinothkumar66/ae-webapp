@@ -76,7 +76,12 @@ export class AnalyticControlComponent {
   selectedData: any = [];
   storedFieldConfigs: any[] = [];
 
-  chartTypes = ['Bar Chart', 'Stacked Bar Chart', 'Line Chart', 'Scatter Chart'];
+  chartTypes = [
+    { key: 'bar', value: 'Bar Chart' },
+    { key: 'spline', value: 'Line Chart' },
+    { key: 'scatter', value: 'Scatter Chart' }
+  ];
+
   queryTypes = ['LastNN', 'Today', 'Range'];
 
   filterFields: any[] = [];
