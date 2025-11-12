@@ -81,7 +81,12 @@ export class ExportDataComponent implements OnInit {
             id: s.serverid,
             name: s.servername
           }));
-          console.log(this.servers)
+
+          if (this.servers.length > 0 && this.exportFormData.selectServer == null) {
+            this.exportFormData.server  = this.servers[0].id;
+            console.log(this.exportFormData.server );
+            this.loadFieldLookups();
+          }
         } catch (e) {
           console.error('JSON parse error:', e);
         }

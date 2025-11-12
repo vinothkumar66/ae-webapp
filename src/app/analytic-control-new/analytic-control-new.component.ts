@@ -79,7 +79,12 @@ export class AnalyticControlNewComponent {
   fieldLookupValues: { [key: string]: string[] } = {};
   selectedData: any = [];
   storedFieldConfigs: any[] = [];
-  chartTypes = ['Bar Chart', 'Stacked Bar Chart', 'Line Chart', 'Scatter Chart'];
+  chartTypes = [
+    { key: 'bar', value: 'Bar Chart' },
+    { key: 'stackedBar', value: 'Stacked Bar Chart' },
+    { key: 'spline', value: 'Line Chart' },
+    { key: 'scatter', value: 'Scatter Chart' },
+  ];
   queryTypes = ['LastNN', 'Today', 'Range'];
   filterFields: any[] = [];
   displayFields: any;
@@ -174,6 +179,12 @@ export class AnalyticControlNewComponent {
             id: s.serverid,
             name: s.servername
           }));
+
+          if (this.formData.servers.length > 0 && this.formData.selectServer == null) {
+            this.formData.selectServer = this.formData.servers[0].id;
+            console.log(this.formData.selectServer);
+            this.loadFieldLookups();
+          }
         } catch (e) {
           console.error('JSON parse error:', e);
         }
@@ -345,7 +356,11 @@ export class AnalyticControlNewComponent {
         let dataFromApiObj = JSON.parse(dataFromApi);
         const windowCardId = this.formData.windowCardId;
 
-        dataFromApiObj.WindowDetails = this.formData;
+         if (Array.isArray(dataFromApiObj)) {
+          dataFromApiObj = { data: dataFromApiObj, WindowDetails: this.formData };
+        } else {
+          dataFromApiObj.WindowDetails = this.formData;
+        }
 
         const existing = JSON.parse(localStorage.getItem("AT_Properties") || '{}');
 

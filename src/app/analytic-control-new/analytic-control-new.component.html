@@ -39,9 +39,11 @@
   </div>
   
   <div class="form-row">
-      <label>Chart Type</label>
-      <dx-select-box
+    <label>Chart Type</label>
+    <dx-select-box
       [items]="chartTypes"
+      displayExpr="value"
+      valueExpr="key"
       [(value)]="formData.chartType">
     </dx-select-box>
   </div>

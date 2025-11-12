@@ -41,9 +41,13 @@ export class PagesViewerComponent {
         this.dataList = parsed;
         this.dashboardList = parsed.filter((p: any) => p.pagetype?.toLowerCase() === 'dashboard');
         this.controlList = parsed.filter((p: any) => p.pagetype?.toLowerCase() === 'control');
-        this.pagesList = parsed.filter(
-          (p: any) => p.pagetype?.toLowerCase() !== 'dashboard' && p.pagetype?.toLowerCase() !== 'control'
-        );
+        this.pagesList = parsed.filter((p: any) => {
+          const type = p.pagetype?.toLowerCase() || '';
+          return (
+            (type === 'realtime' || type === 'analysis') &&
+            !type.includes('windows')
+          );
+        });
       },
       error: (err) => console.error('Failed to fetch pages:', err)
     });

@@ -1,8 +1,14 @@
 .top-bar {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   gap: 10px;
   margin-bottom: 20px;
+}
+
+.top-bar .buttons {
+  display: flex;
+  gap: 10px;
 }
 
 .card-container {
@@ -52,4 +58,27 @@
 
 dx-chart {
   margin-bottom: 20px;
+}
+
+dx-data-grid {
+  width: 100%;
+}
+
+.AlmDash {
+  display: flex;
+  gap: 20px;
+}
+
+.AlmDash dx-data-grid {
+  max-width: 900px;
+}
+
+.AlmDash-Content {
+  border: 1px solid var(--dx-color-separator);
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.AlmDash-Content span {
+  color: var(--dx-color-icon);
 }

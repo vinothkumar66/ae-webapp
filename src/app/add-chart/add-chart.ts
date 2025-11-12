@@ -179,7 +179,7 @@ export class AddChart {
             name: s.servername
           }));
 
-          if (this.formData.servers.length > 0) {
+          if (this.formData.servers.length > 0 && this.formData.selectServer == null) {
             this.formData.selectServer = this.formData.servers[0].id;
             console.log(this.formData.selectServer);
             this.loadFieldLookups();
@@ -414,7 +414,7 @@ export class AddChart {
   saveControl() {
     let fromDate = formatDate(this.formData.fromDate, 'yyyy-MM-dd HH:mm', 'en-US');
     let toDate = formatDate(this.formData.toDate, 'yyyy-MM-dd HH:mm', 'en-US');
-    let timePicker = formatDate(this.formData.timePicker, 'yyyy-MM-dd HH:mm:SS', 'en-US');
+    let timePicker = formatDate(this.formData.timePicker, 'yyyy-MM-dd HH:mm:00', 'en-US');
 
     this.blnChartOutput = this.formData.showControl.includes('Chart');
     this.blnTableOutput = this.formData.showControl.includes('Datatable');

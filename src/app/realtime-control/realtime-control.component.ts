@@ -132,6 +132,8 @@ export class RealtimeControlComponent {
           const matched = parsed.find((item: any) => item.windowCardId === currentCardId);
           if (matched) {
             this.formData = { ...matched };
+
+            console.log(this.formData)
   
             this.formData.displayFields = matched.displayFields || [];
             this.formData.defaultFields = matched.defaultFields || [];
@@ -184,6 +186,14 @@ export class RealtimeControlComponent {
             id: s.serverid,
             name: s.servername
           }));
+
+          console.log(this.formData.selectServer);
+
+          if (this.formData.servers.length > 0 && this.formData.selectServer == null) {
+            this.formData.selectServer = this.formData.servers[0].id;
+            console.log(this.formData.selectServer);
+            this.loadFieldLookups();
+          }
         } catch (e) {
           console.error('JSON parse error:', e);
         }

@@ -362,8 +362,8 @@ export class Dashboard implements OnInit {
         }
       });
     } else if(dragged === 'Card') {
-      if (targetCol.cards && targetCol.cards.length >= 6) {
-        alert('Only 6 cards are allowed in this column.');
+      if (targetCol.cards && targetCol.cards.length >= 1) {
+        // alert('Only 1 cards are allowed in this column.');
         return;
       }
 
@@ -391,14 +391,10 @@ export class Dashboard implements OnInit {
               if (Array.isArray(parsed) && parsed.length === 3) {
                 const [field, operator, value] = parsed;
                 whereConditionFormatted = `( ${field}${operator}'${value}' )`;
-                console.log(whereConditionFormatted);
               }
             } catch (e) {
               console.error('Invalid where condition format', e);
             }
-
-            // targetCol.chartState.showId = akk.analyticId;
-            // targetCol.chartState.rawAkk = akk;
 
             const apiPayload: any = {
               analysistype: akk.analyticId,

@@ -57,8 +57,8 @@ export class MainlayoutComponent {
     const existingLink = document.getElementById('theme-style') as HTMLLinkElement;
   
     const themeHref = this.themeMode === 'light'
-      ? 'assets/themes/dx.material.blue.dark.css'
-      : 'assets/themes/dx.material.blue.light.css';
+      ? 'assets/themes/dx.material.blue.dark.compact.css'
+      : 'assets/themes/dx.material.blue.light.compact.css';
   
     if (existingLink) {
       existingLink.href = themeHref;
