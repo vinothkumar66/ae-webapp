@@ -384,7 +384,7 @@ export class AnalyticControlNewComponent {
         }
 
         localStorage.setItem("AT_Properties", JSON.stringify(updatedStorage));
-        this.router.navigate([`analytic-new`]);
+        this.location.back();
       }
     });
 

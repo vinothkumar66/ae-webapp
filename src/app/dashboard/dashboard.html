@@ -50,7 +50,7 @@
 
 <div class="dashboard-container">
   <div *ngIf="!dashboardItems.length && isViewerMode" class="no-dashboard">
-    <h6>No Dashboard</h6>
+    No Dashboard Available
   </div>
 
   <div class="main-content" (drop)="dropChart($event)" (dragover)="allowDrop($event)">

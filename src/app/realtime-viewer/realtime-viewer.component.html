@@ -1,5 +1,9 @@
 <dx-toolbar [items]="headertoolbar" id="header-toolbar" class="header-toolbar"></dx-toolbar>
 
+ <div *ngIf="!cards || cards.length === 0" class="no-cards">
+    No Windows Available
+  </div>
+  
 <div
   class="dx-card dx-theme-background-color dx-theme-text-color dx-theme-border-color resizable-card"
   *ngFor="let card of cards"

@@ -217,7 +217,7 @@ export class ApiService {
       headers: this.getAuthHeaders(),
       params,
     });
-  }  
+  }
 
   deletePage(id: any): Observable<any> {
     const params = new HttpParams().set('PageId', id);
@@ -286,9 +286,18 @@ export class ApiService {
     });
   }
 
+  DeleteWindow(data: any) {
+    const params = new HttpParams()
+    .set('windowid', data);
+
+    return this.http.post(environment.apiUrl + 'DeleteWindow', {
+      headers: this.getAuthHeaders(),
+      params,
+    });
+  }
+
   SaveAEPage(data: any) {
     let pageProp = JSON.parse(data.PageProperties);
-    console.log(pageProp)
 
     data['PageProperties'] = JSON.stringify(pageProp);
     return this.http.post(environment.apiUrl + 'SaveAEPage', data, {
@@ -298,9 +307,9 @@ export class ApiService {
 
   UpdateAEPage(data: any) {
     let pageProp = JSON.parse(data.PageProperties);
-    pageProp.forEach((el: any) => {
-      el.dataSource = [];
-    });
+    // pageProp.forEach((el: any) => {
+    //   el.dataSource = [];
+    // });
     data['PageProperties'] = JSON.stringify(pageProp);
     return this.http.post(environment.apiUrl + 'UpdateAEPage', data, {
       headers: this.getAuthHeaders()

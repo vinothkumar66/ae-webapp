@@ -1,33 +1,75 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import {
-  DxButtonModule,
-  DxChartModule,
-  DxDataGridModule,
-  DxPolarChartModule
-} from 'devextreme-angular';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { DevExtremeModule } from 'devextreme-angular';
+import { ApiService } from '../services/api.service';
 
 @Component({
   selector: 'app-analytic-viewer-new',
   standalone: true,
   imports: [
     CommonModule,
-    DxChartModule,
-    DxDataGridModule,
-    DxButtonModule,
-    DxPolarChartModule
+    DevExtremeModule
   ],
   templateUrl: './analytic-viewer-new.component.html',
   styleUrls: ['./analytic-viewer-new.component.css']
 })
 export class AnalyticViewerNewComponent implements OnInit {
   cards: any[] = [];
+  isUpdateMode = false;
+  savedPageId: string | null = null;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private apiService: ApiService,
+    private activatedRoute: ActivatedRoute,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit() {
+    this.activatedRoute.paramMap.subscribe(params => {
+      const pageId: any = params.get('id');
+      localStorage.setItem('pageId', pageId);
+      if (pageId) {
+        this.savedPageId = pageId;
+        this.loadPageProperties(pageId);
+        this.isUpdateMode = true;
+        console.log(this.isUpdateMode);
+
+      } else {
+        this.loadLocalCards();
+        this.isUpdateMode = false;
+      }
+      this.cdr.detectChanges();
+    });
+  }
+
+  pageValues: any;
+  loadPageProperties(pageId: string) {
+    this.apiService.getPageProperties(pageId).subscribe({
+      next: (res: any) => {
+        const parsed = typeof res === 'string' ? JSON.parse(res) : res;
+        this.pageValues = parsed;
+        
+        const pageProperties = JSON.parse(parsed.pageproperties);
+
+        console.log(pageProperties)
+
+        if (!localStorage.getItem("AT_Properties")) {
+          localStorage.setItem("AT_Properties", JSON.parse(pageProperties));
+        }
+
+        this.loadLocalCards();
+      },
+      error: (err) => {
+        console.error('Error fetching page properties:', err);
+      }
+    });
+  }
+
+  loadLocalCards() {
     const storedData = localStorage.getItem('AT_Properties');
+    console.log(storedData);
     if (storedData) {
       const parsed = JSON.parse(storedData);
       const windowGroups = parsed.WindowGroups || [];
@@ -166,10 +208,6 @@ export class AnalyticViewerNewComponent implements OnInit {
 
   removeCard(id: number) {
     this.cards = this.cards.filter(card => card.id !== id);
-  }
-
-  onSaveClicked(): void {
-    console.log('Save button clicked');
   }
 
   eeumaData: any[] = [];
@@ -1715,5 +1753,184 @@ export class AnalyticViewerNewComponent implements OnInit {
   StandingACK(data: any) {
     this.StandingACKData = data.charts;
     this.StandingACKTableData = data.Table;
+  }
+
+  isSavePopupVisible = false;
+
+  accessType = [
+    { name: 'Normal', value: 'N' },
+    { name: 'Exclusive', value: 'E' },
+    { name: 'Common', value: 'C' },
+  ];
+
+  mapTypes = ['Enterprise', 'Site', 'Plant', 'Area', 'Unit'];
+
+  popupData: any = {
+    accessType: 'N',
+    refreshRate: 0,
+    dashboardName: '',
+    mapType: 'Enterprise',
+    enterpriseId: null,
+    siteId: null,
+    plantId: null,
+    areaId: null,
+    unitId: null,
+  };
+
+  enterprises = [];
+  sites = [];
+  plants = [];
+  areas = [];
+  units = [];
+
+  openSavePopup() {
+    this.isSavePopupVisible = true;
+
+    this.apiService.GetUserEnterprises().subscribe({
+      next: (res: any) => {
+        this.enterprises = JSON.parse(res)
+      },
+      error: (err) => console.error('SaveAEPage error', err)
+    });
+  }
+
+  onMapTypeChanged(e: any) {
+    this.popupData.mapType = e.value;
+    this.popupData.siteId = null;
+    this.popupData.plantId = null;
+    this.popupData.areaId = null;
+    this.popupData.unitId = null;
+  }
+
+  onEnterpriseChanged(e: any) {
+    this.popupData.enterpriseId = e.value;
+
+    this.apiService.GetSitesByEnterpriseId(e.value).subscribe({
+      next: (res: any) => {
+        this.sites = JSON.parse(res);
+      },
+      error: (err) => console.error('SaveAEPage error', err)
+    });
+
+    this.plants = [];
+    this.areas = [];
+    this.units = [];
+  }
+
+  onSiteChanged(e: any) {
+    this.popupData.siteId = e.value;
+
+    this.apiService.GetPlantsBySiteId(e.value).subscribe({
+      next: (res: any) => {
+        this.plants = JSON.parse(res);
+      },
+      error: (err) => console.error('SaveAEPage error', err)
+    });
+    this.areas = [];
+    this.units = [];
+  }
+
+  onPlantChanged(e: any) {
+    this.popupData.plantId = e.value;
+    this.apiService.GetAreasByPlantId(e.value).subscribe({
+      next: (res: any) => {
+        this.areas = JSON.parse(res);
+      },
+      error: (err) => console.error('SaveAEPage error', err)
+    });
+    this.units = [];
+  }
+
+  onAreaChanged(e: any) {
+    this.popupData.areaId = e.value;
+    this.apiService.GetUnitsByAreaId(e.value).subscribe({
+      next: (res: any) => {
+        this.units = JSON.parse(res);
+      },
+      error: (err) => console.error('SaveAEPage error', err)
+    });
+  }
+
+  confirmSave() {
+    this.isSavePopupVisible = false;
+
+    this.saveAnalyticPage();
+  }
+
+  saveAnalyticPage() {
+    var user: any = localStorage.getItem("user_details");
+    user = JSON.parse(user);
+    const { enterpriseId, siteId, plantId, areaId, unitId } = this.popupData;
+
+    const localData = localStorage.getItem("AT_Properties");
+
+    const pagePayload: any = {
+      PageName: this.popupData.dashboardName,
+      RefreshRate: this.popupData.refreshRate,
+      PageAccessType: "N",
+      MapType: "E", 
+      PageType: "A",
+      PageProperties: JSON.stringify(localData),
+      UserId: user.UserId,
+      EnterpriseId: enterpriseId ?? null,
+      SiteId: siteId ?? null,
+      PlantId: plantId ?? null,
+      AreaId: areaId ?? null,
+      UnitId: unitId ?? null,
+    };
+
+    if (unitId) {
+      pagePayload.MappingId = unitId;
+      pagePayload.MapType = "U";
+    } else if (areaId) {
+      pagePayload.MappingId = areaId;
+      pagePayload.MapType = "A";
+    } else if (plantId) {
+      pagePayload.MappingId = plantId;
+      pagePayload.MapType = "P";
+    } else if (siteId) {
+      pagePayload.MappingId = siteId;
+      pagePayload.MapType = "S";
+    } else if (enterpriseId) {
+      pagePayload.MappingId = enterpriseId;
+      pagePayload.MapType = "E";
+    } else {
+      pagePayload.MappingId = null;
+    }
+
+    console.log(pagePayload);
+
+    this.apiService.SaveAEPage(pagePayload).subscribe({
+      next: () => {
+          localStorage.removeItem("AT_Properties");
+          location.reload();
+      },
+      error: (err) => console.error('SaveAEPage error', err)
+    });  
+  }
+
+  updatePage() {
+    if (!this.savedPageId) {
+      console.error("No page ID found for update");
+      return;
+    }
+
+    const localStorageData = localStorage.getItem('AT_Properties');
+    const user: any = JSON.parse(localStorage.getItem('user_details') || '{}');
+
+    const pagePayload = {
+      PageId: this.pageValues.pageid,
+      PageName: this.pageValues.pagename,
+      RefreshRate: this.pageValues.RefreshRate,
+      PageProperties: localStorageData,
+      UserId: user.UserId
+    };
+
+    this.apiService.UpdateAEPage(pagePayload).subscribe({
+      next: (res) => {
+        alert('Page updated successfully!');
+      },
+      error: (err) => console.error('UpdateAEPage error', err)
+    });
   }
 }

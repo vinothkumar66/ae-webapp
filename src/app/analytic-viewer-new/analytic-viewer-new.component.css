@@ -20,6 +20,7 @@
   background-color: var(--dx-color-main-bg);
   border: 1px solid var(--dx-color-separator);
   border-radius: 10px;
+  margin-bottom: 10px;
   padding: 20px;
   box-shadow: 0 2px 8px var(--dx-color-separator);
   transition: all 0.3s ease;
@@ -81,4 +82,33 @@ dx-data-grid {
 
 .AlmDash-Content span {
   color: var(--dx-color-icon);
+}
+
+.popup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 10px;
+}
+
+.popup-row {
+  display: flex;
+  gap: 20px;
+}
+
+.popup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.no-cards {
+  color: #888;
+  font-size: 16px;
+  font-style: italic;
+  height: calc(100vh - 150px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

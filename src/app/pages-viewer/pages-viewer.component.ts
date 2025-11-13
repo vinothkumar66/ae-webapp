@@ -150,8 +150,14 @@ export class PagesViewerComponent {
   }
 
   navigateToPage(page: any, mode: string) {
-    const url = `analytic/${page.pageid}`;
-    mode === 'blank' ? window.open(url, '_blank') : this.router.navigate([url]);
+    console.log(page)
+    if(page.pagetype === "RealTime") {
+      const url = `realtime/${page.pageid}`;
+      mode === 'blank' ? window.open(url, '_blank') : this.router.navigate([url]);
+    } else {
+      const url = `analytic-new/${page.pageid}`;
+      mode === 'blank' ? window.open(url, '_blank') : this.router.navigate([url]);
+    }    
   }
 
   navigateToDashboard(dashboard: any, mode: string) {

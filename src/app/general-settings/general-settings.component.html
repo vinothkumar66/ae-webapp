@@ -61,13 +61,6 @@
       [formData]="generalSettingsData"
       [colCount]="2"
       labelLocation="top">
-  
-      <dxi-item 
-        dataField="Name" 
-        editorType="dxTextBox"
-        [editorOptions]="{ placeholder: 'Name' }">
-      </dxi-item>
-  
       <dxi-item>
         <div class="custom-uploader">
           <span>Pick Logo</span>
@@ -94,6 +87,12 @@
             (onValueChanged)="handleBgImageUpload($event)">
           </dx-file-uploader>
         </div>
+      </dxi-item>
+
+      <dxi-item 
+        dataField="Name" 
+        editorType="dxTextBox"
+        [editorOptions]="{ placeholder: 'Name' }">
       </dxi-item>
     </dx-form>
 

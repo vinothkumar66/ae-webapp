@@ -174,7 +174,7 @@ export class RealtimeControlComponent {
     private apiService: ApiService,
     private route: ActivatedRoute,
     private location: Location,
-    private router: Router
+    private router: Router 
   ) {}
 
   getServers() {
@@ -292,10 +292,12 @@ export class RealtimeControlComponent {
       console.error('Invalid where condition format', e);
     }
 
+    const pageId: any = localStorage.getItem('pageId');
+
     const postData = {
       displayfields: this.defaultFields.join(","),
-      pageid: '',
-      serverid: this.formData.server,
+      pageid: pageId ? pageId : '',
+      serverid: this.formData.selectServer,
       wherecondition: whereConditionFormatted,
       windowId: this.formData.windowId
     };
@@ -314,7 +316,7 @@ export class RealtimeControlComponent {
         }
 
         localStorage.setItem("RT_Properties", JSON.stringify(existingData));
-        this.router.navigate(['realtime']);
+        this.location.back();
       },
       error: (err) => {
         console.error("Save failed:", err);

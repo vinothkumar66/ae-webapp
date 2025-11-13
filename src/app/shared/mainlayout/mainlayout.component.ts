@@ -43,12 +43,12 @@ export class MainlayoutComponent {
   navigateTo(route: string) {
     if(route === 'login'){
       localStorage.clear();
-    } else if (route === 'analytic') {
+    } else {
       localStorage.removeItem('AT_Properties');
       localStorage.removeItem('Analysis');
-    } else if (route === 'realtime') {
       localStorage.removeItem('RT_Properties');
-    }
+    } 
+    
     this.router.navigate([route]);
   }
 

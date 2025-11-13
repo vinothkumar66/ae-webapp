@@ -3,11 +3,16 @@
 
   <div class="buttons">
     <dx-button text="Add Control" icon="add" type="default" (onClick)="addCard()"></dx-button>
-    <dx-button text="Save" icon="save" type="success" (onClick)="onSaveClicked()"></dx-button>
+    <dx-button text="Save" icon="save" type="success" *ngIf="this.isUpdateMode == false" (onClick)="openSavePopup()"></dx-button>
+    <dx-button text="Update" icon="refresh" type="success" *ngIf="this.isUpdateMode == true" (onClick)="updatePage()"></dx-button>
   </div>
 </div>
 
 <div class="card-container">
+  <div *ngIf="!cards || cards.length === 0" class="no-cards">
+    No Windows Available
+  </div>
+
   <div class="card" *ngFor="let card of cards">
     <div class="card-header">
       <span class="card-title">{{ card.title || 'Card Title' }}</span>
@@ -608,3 +613,134 @@
     </div>
   </div>
 </div>
+
+<dx-popup
+  [(visible)]="isSavePopupVisible"
+  [width]="800"
+  [height]="'auto'"
+  [showTitle]="true"
+  title="Save Settings"
+  [dragEnabled]="true"
+  [hideOnOutsideClick]="true">
+
+  <div *dxTemplate="let data of 'content'">
+    <div class="popup-form">
+
+      <div class="">
+        <label>Page Name</label>
+        <dx-text-box
+          [(value)]="popupData.dashboardName"
+          placeholder="Enter Page Name">
+        </dx-text-box>
+      </div>
+
+      <div class="popup-row">
+        <div class="">
+          <label>Access Type</label>
+          <dx-select-box
+            [items]="accessType"
+            displayExpr="name"
+            valueExpr="value"
+            [(value)]="popupData.accessType">
+          </dx-select-box>
+        </div>
+
+        <div class="">
+          <label>Refresh Rate (mins)</label>
+          <dx-number-box
+            [(value)]="popupData.refreshRate"
+            [min]="0"
+            [showSpinButtons]="true">
+          </dx-number-box>
+        </div>
+      </div>
+
+      <div class="popup-row">
+        <div class="">
+          <label>Map Type</label>
+          <dx-select-box
+            [items]="mapTypes"
+            [(value)]="popupData.mapType"
+            (onValueChanged)="onMapTypeChanged($event)">
+          </dx-select-box>
+        </div>
+
+        <!-- Enterprise -->
+        <div class="" *ngIf="popupData.mapType">
+          <label>Enterprise</label>
+          <dx-select-box
+            [items]="enterprises"
+            displayExpr="EnterPriseName"
+            valueExpr="EnterpriseID"
+            [(value)]="popupData.enterpriseId"
+            (onValueChanged)="onEnterpriseChanged($event)">
+          </dx-select-box>
+        </div>
+      </div>
+
+      <div class="popup-row">
+        <!-- Site -->
+        <div class="" *ngIf="['Site','Plant','Area','Unit'].includes(popupData.mapType)">
+          <label>Site</label>
+          <dx-select-box
+            [items]="sites"
+            displayExpr="SiteName"
+            valueExpr="SiteId"
+            [(value)]="popupData.siteId"
+            (onValueChanged)="onSiteChanged($event)">
+          </dx-select-box>
+        </div>
+
+        <!-- Plant -->
+        <div class="" *ngIf="['Plant','Area','Unit'].includes(popupData.mapType)">
+          <label>Plant</label>
+          <dx-select-box
+            [items]="plants"
+            displayExpr="PlantName"
+            valueExpr="PlantId"
+            [(value)]="popupData.plantId"
+            (onValueChanged)="onPlantChanged($event)">
+          </dx-select-box>
+        </div>
+      </div>
+
+      <div class="popup-row">
+        <!-- Area -->
+        <div class="" *ngIf="['Area','Unit'].includes(popupData.mapType)">
+          <label>Area</label>
+          <dx-select-box
+            [items]="areas"
+            displayExpr="AreaName"
+            valueExpr="AreaId"
+            [(value)]="popupData.areaId"
+            (onValueChanged)="onAreaChanged($event)">
+          </dx-select-box>
+        </div>
+
+        <!-- Unit -->
+        <div class="" *ngIf="popupData.mapType === 'Unit'">
+          <label>Unit</label>
+          <dx-select-box
+            [items]="units"
+            displayExpr="UnitName"
+            valueExpr="UnitId"
+            [(value)]="popupData.unitId">
+          </dx-select-box>
+        </div>
+      </div>
+
+      <div class="popup-actions">
+        <dx-button
+          text="Confirm"
+          type="success"
+          (onClick)="confirmSave()">
+        </dx-button>
+
+        <dx-button
+          text="Cancel"
+          (onClick)="isSavePopupVisible = false">
+        </dx-button>
+      </div>
+    </div>
+  </div>
+</dx-popup>
