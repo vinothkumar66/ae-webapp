@@ -1,51 +1,25 @@
 <div class="dashboard-toolbar">
-  <dx-button
-    *ngIf="!isViewerMode"
-    icon="save"
-    text="Save"
-    hint="Save Dashboard"
-    stylingMode="contained"
-    type="default"
-    (onClick)="openSavePopup()"
-  ></dx-button>
+   <dx-select-box
+    [items]="dashboardNames"
+    placeholder="Select Dashboard"
+    displayExpr="pagename"
+    valueExpr="pageid"
+    [(value)]="selectedDashboardId"
+    (onValueChanged)="onTypeChanged($event)"
+    stylingMode="outlined">
+  </dx-select-box>
 
-  <dx-button
-    *ngIf="!isViewerMode"
-    icon="add"
-    text="New Dashboard"
-    hint="New Dashboard"
-    stylingMode="outlined"
-    type="danger"
-    (onClick)="clearDashboard()"
-  ></dx-button>
+  <dx-button *ngIf="!isViewerMode && !isUpdateMode" icon="save" text="Save" hint="Save Dashboard" stylingMode="contained" type="default" (onClick)="openSavePopup()"></dx-button>
 
-  <dx-button
-    *ngIf="!isViewerMode"
-    icon="eyeopen"
-    text="Viewer"
-    hint="Switch to Viewer"
-    stylingMode="text"
-    (onClick)="toggleViewerMode()"
-  ></dx-button>
+  <dx-button *ngIf="!isViewerMode && isUpdateMode" text="Update" icon="refresh" type="success" (onClick)="updatePage()"></dx-button>
 
-  <dx-button
-    *ngIf="!isViewerMode"
-    icon="plus"
-    text="Add Chart"
-    hint="Add Chart"
-    stylingMode="contained"
-    type="success"
-    (onClick)="goToAddChart()"
-  ></dx-button>
+  <dx-button *ngIf="!isViewerMode" icon="add" text="New Dashboard" hint="New Dashboard" stylingMode="outlined" type="danger" (onClick)="clearDashboard()"></dx-button>
 
-  <dx-button
-    *ngIf="isViewerMode"
-    icon="edit"
-    text="Designer"
-    hint="Switch to Designer"
-    stylingMode="contained"
-    (onClick)="toggleViewerMode()"
-  ></dx-button>
+  <dx-button *ngIf="!isViewerMode" icon="eyeopen" text="Viewer" hint="Switch to Viewer" stylingMode="text" (onClick)="toggleViewerMode()"></dx-button>
+
+  <dx-button *ngIf="!isViewerMode" icon="plus" text="Add Chart" hint="Add Chart" stylingMode="contained" type="success" (onClick)="goToAddChart()"></dx-button>
+
+  <dx-button *ngIf="isViewerMode" icon="edit" text="Designer" hint="Switch to Designer" stylingMode="contained" (onClick)="toggleViewerMode()"></dx-button>
 </div>
 
 <div class="dashboard-container">

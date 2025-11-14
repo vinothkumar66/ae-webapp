@@ -1,11 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
-import { DxTabPanelModule } from 'devextreme-angular/ui/tab-panel';
-import { DxFormModule } from 'devextreme-angular/ui/form';
-import { DxTextBoxModule } from 'devextreme-angular/ui/text-box';
-import { DxFileUploaderModule } from 'devextreme-angular/ui/file-uploader';
-import { ChangeDetectorRef } from '@angular/core';
-import { DxButtonModule } from 'devextreme-angular';
+import { Component, ChangeDetectorRef, OnInit } from '@angular/core';
+import { DevExtremeModule } from 'devextreme-angular';
 import notify from 'devextreme/ui/notify';
 import { ApiService } from '../services/api.service';
 import { Router } from '@angular/router';
@@ -15,16 +10,12 @@ import { Router } from '@angular/router';
   standalone: true,
   imports: [
     CommonModule,
-    DxTabPanelModule,
-    DxFormModule,
-    DxTextBoxModule,
-    DxFileUploaderModule,
-    DxButtonModule
+    DevExtremeModule
   ],
   templateUrl: './general-settings.component.html',
-  styleUrl: './general-settings.component.css'
+  styleUrls: ['./general-settings.component.css']
 })
-export class GeneralSettingsComponent {
+export class GeneralSettingsComponent implements OnInit {
   changePasswordData = {
     currentPassword: '',
     newPassword: '',
@@ -39,7 +30,25 @@ export class GeneralSettingsComponent {
 
   passwordEditorOptionsMap: { [key: string]: any } = {};
 
-  constructor(private cdr: ChangeDetectorRef, private apiService: ApiService, private router: Router) {
+  generalSettingsData: { 
+    HeaderName: string,
+    LoginHeaderName: string,
+    Logo: Blob | null, 
+    BackGroundImage: Blob | null 
+  } = {
+    HeaderName: '',
+    LoginHeaderName: '',
+    Logo: null,
+    BackGroundImage: null
+  };
+
+  logoPreviewUrl: string | null = null;
+  bgImagePreviewUrl: string | null = null;
+
+  constructor(private cdr: ChangeDetectorRef, private apiService: ApiService, private router: Router) {}
+
+  ngOnInit() {
+    this.loadSavedData();
     this.initPasswordEditorOptions();
   }
 
@@ -110,7 +119,6 @@ export class GeneralSettingsComponent {
     this.apiService.changePassword(password).subscribe({
       next: (dataFromApi: any) => {
         notify('Password changed successfully!', 'success', 3000);
-
         this.handleClear();
         this.router.navigate(['login']);
       },
@@ -126,35 +134,74 @@ export class GeneralSettingsComponent {
     this.cdr.detectChanges();
   }
 
-  generalSettingsData: { Name: string, Logo: Blob | null, BackGroundImage: Blob | null } = {
-    Name: '', 
-    Logo: null,
-    BackGroundImage: null
-  };
-
-  handleImageUpload(event: any) {
-    const file = event.value[0];
-    if (file) {
+  handleImageUpload(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
       const reader = new FileReader();
       reader.onload = () => {
         this.generalSettingsData.Logo = new Blob([reader.result as ArrayBuffer], { type: file.type });
+        this.logoPreviewUrl = reader.result as string; // Data URL for preview
+        this.cdr.detectChanges();
       };
-      reader.readAsArrayBuffer(file);
+      reader.readAsDataURL(file);
     }
   }
 
-  handleBgImageUpload(event: any) {
-    const file = event.value[0];
-    if (file) {
+  handleBgImageUpload(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
       const reader = new FileReader();
       reader.onload = () => {
         this.generalSettingsData.BackGroundImage = new Blob([reader.result as ArrayBuffer], { type: file.type });
+        this.bgImagePreviewUrl = reader.result as string;
+        this.cdr.detectChanges();
       };
-      reader.readAsArrayBuffer(file);
+      reader.readAsDataURL(file);
     }
   }
 
   saveFormData() {
-    console.log(this.generalSettingsData);
+    const saveData = {
+      HeaderName: this.generalSettingsData.HeaderName,
+      LoginHeaderName: this.generalSettingsData.LoginHeaderName,
+      Logo: this.logoPreviewUrl,
+      BackGroundImage: this.bgImagePreviewUrl
+    };
+
+    localStorage.setItem('generalSettings', JSON.stringify(saveData));
+    notify('Settings Saved', 'success', 3000);
+  }
+
+  loadSavedData() {
+    const saved = localStorage.getItem('generalSettings');
+    if (saved) {
+      const data = JSON.parse(saved);
+
+      this.generalSettingsData.HeaderName = data.HeaderName || '';
+      this.generalSettingsData.LoginHeaderName = data.LoginHeaderName || '';
+
+      this.logoPreviewUrl = data.Logo || null;
+      this.bgImagePreviewUrl = data.BackGroundImage || null;
+
+      this.generalSettingsData.Logo = this.dataURLToBlob(this.logoPreviewUrl);
+      this.generalSettingsData.BackGroundImage = this.dataURLToBlob(this.bgImagePreviewUrl);
+    }
+  }
+
+  dataURLToBlob(dataUrl: string | null): Blob | null {
+    if (!dataUrl) return null;
+    const arr = dataUrl.split(',');
+    const mimeMatch = arr[0].match(/:(.*?);/);
+    if (!mimeMatch) return null;
+    const mime = mimeMatch[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
   }
 }

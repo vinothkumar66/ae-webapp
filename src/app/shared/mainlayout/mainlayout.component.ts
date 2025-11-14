@@ -47,6 +47,7 @@ export class MainlayoutComponent {
       localStorage.removeItem('AT_Properties');
       localStorage.removeItem('Analysis');
       localStorage.removeItem('RT_Properties');
+      localStorage.removeItem('Dashboard_Properties');
     } 
     
     this.router.navigate([route]);

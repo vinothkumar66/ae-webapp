@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GridsterConfig, GridsterComponent, GridsterModule } from 'angular-gridster2';
 import { DevExtremeModule } from 'devextreme-angular';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../services/api.service';
 
 @Component({
@@ -40,6 +40,9 @@ export class Dashboard implements OnInit {
     enableBoundaryControl: true
   };
 
+  isUpdateMode = false;
+  savedPageId: string | null = null;
+
   dashboardItems: any[] = [];
   availableCharts: any[] = [];
 
@@ -49,9 +52,12 @@ export class Dashboard implements OnInit {
     { title: 'Card', cols: 4, rows: 2 },
   ];
   activeTab = 'controls';
+  dashboardNames: any = [];
+  selectedDashboardId: number | null = null;
 
   constructor(
     private router: Router,
+    private activatedRoute :ActivatedRoute,
     private apiService: ApiService, 
     private cdr: ChangeDetectorRef
   ) {}
@@ -61,12 +67,55 @@ export class Dashboard implements OnInit {
       next: (dataFromApi: any) => {
         const flatData = JSON.parse(dataFromApi);
         const controlPages = flatData.filter((d: any) => d.pagetype === 'Control');
+        this.dashboardNames = flatData.filter((d: any) => d.pagetype === 'DashBoard');
+        if (this.dashboardNames.length > 0) {
+          this.selectedDashboardId = this.dashboardNames[0].pageid; 
+        }
         this.availableCharts = controlPages;
         this.cdr.detectChanges();
       }
     });
 
-    const saved = localStorage.getItem('savedDashboard');
+    // this.activatedRoute.paramMap.subscribe(params => {
+    //   const pageId: any = params.get('id');
+    //   localStorage.setItem('pageId', pageId);
+    //   if (pageId) {
+    //     this.savedPageId = pageId;
+    //     this.loadPageProperties(pageId);
+    //     this.isUpdateMode = true;
+
+    //   } else {
+    //     this.loadLocalCards();
+    //     this.isUpdateMode = false;
+    //   }
+    //   this.cdr.detectChanges();
+    // });
+  }
+
+  pageValues: any;
+  loadPageProperties(pageId: string) {
+    this.apiService.getPageProperties(pageId).subscribe({
+      next: (res: any) => {
+        const parsed = typeof res === 'string' ? JSON.parse(res) : res;
+        this.pageValues = parsed;
+        console.log(parsed)
+        
+        const pageProperties = JSON.parse(parsed.pageproperties);
+
+        if (!localStorage.getItem("Dashboard_Properties")) {
+          localStorage.setItem("Dashboard_Properties", JSON.stringify(pageProperties));
+        }
+
+        this.loadLocalCards();
+      },
+      error: (err) => {
+        console.error('Error fetching page properties:', err);
+      }
+    });
+  }
+
+  loadLocalCards() {
+    const saved = localStorage.getItem('Dashboard_Properties');
     if (saved) {
       const parsed = JSON.parse(saved);
       this.dashboardHeader = parsed.header ?? null;
@@ -84,7 +133,16 @@ export class Dashboard implements OnInit {
 
       this.refreshAllGridsters();
     }
+  }
 
+  onTypeChanged(e: any) {
+    this.isUpdateMode = true;
+    localStorage.removeItem("Dashboard_Properties");
+
+    if(this.selectedDashboardId != null) {
+      this.savedPageId = e.value;
+      this.loadPageProperties(e.value);
+    }
   }
   
   isSavePopupVisible = false;
@@ -120,7 +178,7 @@ export class Dashboard implements OnInit {
 
     this.apiService.GetUserEnterprises().subscribe({
       next: (res: any) => {
-        this.enterprises = JSON.parse(res)
+        this.enterprises = JSON.parse(res);
       },
       error: (err) => console.error('SaveAEPage error', err)
     });
@@ -141,9 +199,9 @@ export class Dashboard implements OnInit {
       next: (res: any) => {
         this.sites = JSON.parse(res);
       },
-      error: (err) => console.error('SaveAEPage error', err)
+      error: (err) => console.error('Enterprise error', err)
     });
-
+ 
     this.plants = [];
     this.areas = [];
     this.units = [];
@@ -156,7 +214,7 @@ export class Dashboard implements OnInit {
       next: (res: any) => {
         this.plants = JSON.parse(res);
       },
-      error: (err) => console.error('SaveAEPage error', err)
+      error: (err) => console.error('Site error', err)
     });
     this.areas = [];
     this.units = [];
@@ -168,7 +226,7 @@ export class Dashboard implements OnInit {
       next: (res: any) => {
         this.areas = JSON.parse(res);
       },
-      error: (err) => console.error('SaveAEPage error', err)
+      error: (err) => console.error('Plant error', err)
     });
     this.units = [];
   }
@@ -179,7 +237,7 @@ export class Dashboard implements OnInit {
       next: (res: any) => {
         this.units = JSON.parse(res);
       },
-      error: (err) => console.error('SaveAEPage error', err)
+      error: (err) => console.error('Area error', err)
     });
   }
 
@@ -424,8 +482,8 @@ export class Dashboard implements OnInit {
 
                 targetCol.cards.push({
                   type: 'card',
-                  value: flatData.Table[0].totalcount,   
-                  label: flatData.Table[0].tagno,
+                  value: flatData.Table[0].count,   
+                  label: flatData.Table[0].plant,
                 });
 
                 console.log(targetCol);
@@ -703,7 +761,7 @@ export class Dashboard implements OnInit {
           chartTitle: col.chartTitle,
           chartState: {
             ...col.chartState,
-            chartType: col.chartState?.chartType // explicitly save chartType
+            chartType: col.chartState?.chartType
           },
           x: col.x ?? 0,
           y: col.y ?? 0,
@@ -756,7 +814,57 @@ export class Dashboard implements OnInit {
       error: (err) => console.error('SaveAEPage error', err)
     });
 
-    localStorage.setItem('savedDashboard', JSON.stringify(savedLayout));
+    localStorage.setItem('Dashboard_Properties', JSON.stringify(savedLayout));
+  }
+
+  updatePage() {
+    const user: any = JSON.parse(localStorage.getItem('user_details') || '{}');
+
+    const savedLayout = {
+      header: this.dashboardHeader,
+      rows: this.dashboardItems.map(row => ({
+        height: row.height,
+        rows: row.rows,
+        cols: row.cols,
+        gridsterOptions: row.gridsterOptions,
+        columns: row.columns.map((col: any) => ({
+          cards: col.cards,
+          cols: col.cols,
+          rows: col.rows,
+          chartTitle: col.chartTitle,
+          chartState: {
+            ...col.chartState,
+            chartType: col.chartState?.chartType
+          },
+          x: col.x ?? 0,
+          y: col.y ?? 0,
+        }))
+      }))
+    };
+
+    localStorage.setItem('Dashboard_Properties', JSON.stringify(savedLayout));
+
+    if (!this.savedPageId) {
+      console.error("No page ID found for update");
+      return;
+    }
+
+    const localStorageData = localStorage.getItem('Dashboard_Properties');
+
+    const pagePayload = {
+      PageId: this.pageValues.pageid,
+      PageName: this.pageValues.pagename,
+      RefreshRate: this.pageValues.RefreshRate,
+      PageProperties: localStorageData,
+      UserId: user.UserId
+    };
+
+    this.apiService.UpdateAEPage(pagePayload).subscribe({
+      next: (res) => {
+        alert('Page updated successfully!');
+      },
+      error: (err) => console.error('UpdateAEPage error', err)
+    });
   }
 
   clearDashboard() {
@@ -764,7 +872,10 @@ export class Dashboard implements OnInit {
     if (confirm('Clear dashboard layout?')) {
       this.dashboardItems = [];
       this.dashboardHeader = null;
-      localStorage.removeItem('savedDashboard');
+      this.isUpdateMode = false;
+      localStorage.removeItem('pageId');
+      this.selectedDashboardId = null;
+      localStorage.removeItem('Dashboard_Properties');
     }
   }
 

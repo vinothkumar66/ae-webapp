@@ -26,9 +26,6 @@ export const routes: Routes = [
     path: '',
     component: MainlayoutComponent,
     children: [
-      { path: 'analytic', component: AnalyticViewerComponent },
-      { path: 'analytic/:id', component: AnalyticViewerComponent },
-      { path: 'analytic-control', component: AnalyticControlComponent },
       { path: 'realtime', component: RealtimeViewerComponent },
       { path: 'realtime/:id', component: RealtimeViewerComponent },
       { path: 'realtime-control/:id', component: RealtimeControlComponent },
@@ -39,14 +36,19 @@ export const routes: Routes = [
       { path: 'quickaccess', component: QuickAccessComponent },
       { path: 'general-settings', component: GeneralSettingsComponent },
       { path: 'analysis-settings', component: AnalysisSettingsComponent },
-      { path: 'realtimecontrol', component: RealtimeeComponent },
-      { path: 'realtime-resize', component: RealtimeViewerResizeComponent },
       { path: 'analytic-control-new/:id', component: AnalyticControlNewComponent },
       { path: 'analytic-new', component: AnalyticViewerNewComponent },
       { path: 'analytic-new/:id', component: AnalyticViewerNewComponent },
       { path: 'dashboard', component: Dashboard },
       { path: 'dashboard/:id', component: Dashboard },
       { path: 'add-chart', component: AddChart },
+      { path: 'add-chart/:id', component: AddChart },
+
+      { path: 'analytic-control', component: AnalyticControlComponent },
+      { path: 'realtimecontrol', component: RealtimeeComponent },
+      { path: 'realtime-resize', component: RealtimeViewerResizeComponent },
+      { path: 'analytic', component: AnalyticViewerComponent },
+      { path: 'analytic/:id', component: AnalyticViewerComponent },
     ]
   }
 ];
