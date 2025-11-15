@@ -45,6 +45,7 @@ export const routes: Routes = [
       { path: 'add-chart/:id', component: AddChart },
 
       { path: 'analytic-control', component: AnalyticControlComponent },
+      { path: 'analytic-control/:id', component: AnalyticControlComponent },
       { path: 'realtimecontrol', component: RealtimeeComponent },
       { path: 'realtime-resize', component: RealtimeViewerResizeComponent },
       { path: 'analytic', component: AnalyticViewerComponent },

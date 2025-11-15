@@ -1,25 +1,23 @@
 <div class="dashboard-toolbar">
-   <dx-select-box
-    [items]="dashboardNames"
-    placeholder="Select Dashboard"
-    displayExpr="pagename"
-    valueExpr="pageid"
-    [(value)]="selectedDashboardId"
-    (onValueChanged)="onTypeChanged($event)"
-    stylingMode="outlined">
-  </dx-select-box>
+  <div>
+    <dx-select-box [items]="dashboardNames" placeholder="Select Dashboard" displayExpr="pagename" valueExpr="pageid" [(value)]="selectedDashboardId" (onValueChanged)="onTypeChanged($event)" stylingMode="outlined"></dx-select-box>
+  </div>
+ 
+  <div class="header-icons">
+    <dx-button *ngIf="isViewerMode" icon="daterangepicker" text="Date Range" hint="Date Range" stylingMode="contained" type="default" (onClick)="openFilterPopup()"></dx-button>
+  
+    <dx-button *ngIf="!isViewerMode && !isUpdateMode" icon="save" text="Save" hint="Save Dashboard" stylingMode="contained" type="default" (onClick)="openSavePopup()"></dx-button>
 
-  <dx-button *ngIf="!isViewerMode && !isUpdateMode" icon="save" text="Save" hint="Save Dashboard" stylingMode="contained" type="default" (onClick)="openSavePopup()"></dx-button>
+    <dx-button *ngIf="!isViewerMode && isUpdateMode" text="Update" icon="refresh" type="success" (onClick)="updatePage()"></dx-button>
 
-  <dx-button *ngIf="!isViewerMode && isUpdateMode" text="Update" icon="refresh" type="success" (onClick)="updatePage()"></dx-button>
+    <dx-button *ngIf="!isViewerMode" icon="add" text="New Dashboard" hint="New Dashboard" stylingMode="outlined" type="danger" (onClick)="clearDashboard()"></dx-button>
 
-  <dx-button *ngIf="!isViewerMode" icon="add" text="New Dashboard" hint="New Dashboard" stylingMode="outlined" type="danger" (onClick)="clearDashboard()"></dx-button>
+    <dx-button *ngIf="!isViewerMode" icon="eyeopen" text="Viewer" hint="Switch to Viewer" stylingMode="text" (onClick)="toggleViewerMode()"></dx-button>
 
-  <dx-button *ngIf="!isViewerMode" icon="eyeopen" text="Viewer" hint="Switch to Viewer" stylingMode="text" (onClick)="toggleViewerMode()"></dx-button>
+    <dx-button *ngIf="!isViewerMode" icon="plus" text="Add Chart" hint="Add Chart" stylingMode="contained" type="success" (onClick)="goToAddChart()"></dx-button>
 
-  <dx-button *ngIf="!isViewerMode" icon="plus" text="Add Chart" hint="Add Chart" stylingMode="contained" type="success" (onClick)="goToAddChart()"></dx-button>
-
-  <dx-button *ngIf="isViewerMode" icon="edit" text="Designer" hint="Switch to Designer" stylingMode="contained" (onClick)="toggleViewerMode()"></dx-button>
+    <dx-button *ngIf="isViewerMode" icon="edit" text="Designer" hint="Switch to Designer" stylingMode="contained" (onClick)="toggleViewerMode()"></dx-button>
+  </div>
 </div>
 
 <div class="dashboard-container">
@@ -878,7 +876,7 @@
         </div>
 
         <div class="">
-          <label>Refresh Rate (mins)</label>
+          <label>Refresh Rate (Seconds)</label>
           <dx-number-box
             [(value)]="popupData.refreshRate"
             [min]="0"
@@ -974,5 +972,25 @@
         </dx-button>
       </div>
     </div>
+  </div>
+</dx-popup>
+
+<dx-popup
+  [visible]="isFilterPopupVisible"
+  [width]="600"
+  [height]="'auto'"
+  [showTitle]="true"
+  [title]="'Date Range'"
+  [dragEnabled]="true"
+  [hideOnOutsideClick]="true"
+>
+  <dx-form [formData]="filterModel" [colCount]="1">
+    <dxi-item dataField="fromDate" editorType="dxDateBox" [editorOptions]="{ type: 'datetime', displayFormat: 'yyyy-MM-dd HH:mm:00', pickerType: 'calendar' }" label="{ text: 'From Date' }"></dxi-item>
+    <dxi-item dataField="toDate" editorType="dxDateBox" [editorOptions]="{ type: 'datetime', displayFormat: 'yyyy-MM-dd HH:mm:00', pickerType: 'calendar' }" label="{ text: 'To Date' }"></dxi-item>
+  </dx-form>
+
+  <div class="datefilter_buttons">
+    <dx-button text="Apply" type="success" (onClick)="applyDateFilter()"></dx-button>
+    <dx-button text="Cancel" (onClick)="isFilterPopupVisible = false"></dx-button>
   </div>
 </dx-popup>

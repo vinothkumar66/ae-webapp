@@ -16,7 +16,7 @@ import {
 } from 'devextreme-angular';
 import { DxSortableTypes } from 'devextreme-angular/ui/sortable';
 import { ApiService } from '../services/api.service';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 
 interface MenuItem {
@@ -48,14 +48,15 @@ type DxoItemDraggingProperties = DxSortableTypes.Properties;
 export class AnalyticControlComponent {
   @ViewChild('dropDownButton') dropDownButton!: DxDropDownButtonComponent;
 
-  existingData: any = JSON.parse(localStorage.getItem('Analysis') || '{}');
+  existingData: any = JSON.parse(localStorage.getItem('AT_Properties') || '{}');
+  currentCardId: string | null = null;
 
-  formData: any = this.existingData.WindowDetails || {
+  formData: any = {
     analyticTitle: '',
     analyticId: '',
     analyticType: '',
     chartType: '',
-    showControl: ['Datatable', 'Chart'],
+    showControl: ['Chart'],
     selectServer: null,
     servers: [],
     queryType: 'LastNN',
@@ -67,28 +68,28 @@ export class AnalyticControlComponent {
     toDate: new Date(),
     timePicker: new Date(),
     displayFields: '',
-    defaultFields: ''
+    defaultFields: '',
+    conditionFields: '',
+    windowCardId: null,
   };
-  dropdownText: string = this.existingData.WindowDetails?.analyticType || 'Select Analytic Type';
+
+  dropdownText: string = 'Select Analytic Type';
   menuItems: MenuItem[] = [];
   fieldLookupValues: { [key: string]: string[] } = {};
-
   selectedData: any = [];
   storedFieldConfigs: any[] = [];
-
   chartTypes = [
     { key: 'bar', value: 'Bar Chart' },
+    { key: 'stackedBar', value: 'Stacked Bar Chart' },
     { key: 'spline', value: 'Line Chart' },
-    { key: 'scatter', value: 'Scatter Chart' }
+    { key: 'scatter', value: 'Scatter Chart' },
   ];
-
   queryTypes = ['LastNN', 'Today', 'Range'];
-
   filterFields: any[] = [];
   displayFields: any;
   defaultFields: any;
   fields: any = "null";
-  selectedAnalysisId: any = this.existingData.WindowDetails?.analyticId || null;
+  selectedAnalysisId: any = null;
 
   private _filterValue: any = null;
   get filterValue(): any {
@@ -100,18 +101,55 @@ export class AnalyticControlComponent {
     this.onFilterValueChanged(value);
   }
 
+  constructor(
+    private apiService: ApiService,
+    private route: ActivatedRoute,
+    private location: Location,
+    private router: Router
+  ) {}
+
+  ngOnInit(): void {
+    this.getServers();
+    this.getAnalysis();
+
+    this.route.paramMap.subscribe((params: any) => {
+      this.currentCardId = params.get('id');
+      this.formData.windowCardId = this.currentCardId;
+
+      const matchedWindow = this.existingData.WindowGroups?.find(
+        (group: any) => group.windowCardId === this.currentCardId
+      );
+
+      if (matchedWindow && matchedWindow.WindowDetails?.WindowDetails) {
+        this.formData = matchedWindow.WindowDetails.WindowDetails;
+        this.dropdownText = this.formData.analyticType || 'Select Analytic Type';
+        this.selectedAnalysisId = this.formData.analyticId || null;
+
+        this.displayFields = this.formData.displayFields;
+          this.defaultFields = this.formData.defaultFields;
+
+        try {
+          this.filterValue = this.formData.fields ? JSON.parse(this.formData.fields) : [];
+        } catch (e) {
+          console.warn('Invalid json Value', e);
+          this.filterValue = [];
+        }
+
+        this.storedFieldConfigs = this.formData.conditionFields.map((field: any) => ({
+          dataField: field,
+          dataType: 'string',
+          filterOperations: ['=', '<>', 'contains']
+        }));
+
+        this.filterFields = [...this.storedFieldConfigs];
+
+        this.loadFieldLookups();
+      }
+    });
+  }
+
   onFilterValueChanged(value: any) {
     this.formData.fields = JSON.stringify(value);
-
-    const extractFields = (val: any): string[] => {
-      if (Array.isArray(val)) {
-        if (typeof val[0] === 'string' && val.length === 3) {
-          return [val[0]];
-        }
-        return val.flatMap((v) => extractFields(v));
-      }
-      return [];
-    };
   }
 
   onDragStart: DxoItemDraggingProperties['onDragStart'] = (e) => {
@@ -130,19 +168,6 @@ export class AnalyticControlComponent {
     this.onRemove(e as DxSortableTypes.RemoveEvent);
     this.onAdd(e as DxSortableTypes.AddEvent);
   };
-
-  ngOnInit(): void {
-    this.getServers();
-    this.getAnalysis();
-
-    console.log(this.existingData.WindowDetails);
-  }
-
-  constructor(
-    private apiService: ApiService,
-    private route: Router,
-    private location: Location
- ) { }
 
   getServers() {
     this.apiService.getServers().subscribe({
@@ -173,7 +198,6 @@ export class AnalyticControlComponent {
     this.apiService.getAnalysis().subscribe({
       next: (dataFromApi: any) => {
         this.selectedData = JSON.parse(dataFromApi);
-
         this.menuItems = this.generateMenuItems(this.selectedData);
       },
       error: (err) => {
@@ -185,16 +209,15 @@ export class AnalyticControlComponent {
   generateMenuItems(items: any[]): MenuItem[] {
     return items.map((item) => {
       const hasChildren = Array.isArray(item.Childs) && item.Childs.length > 0;
-  
       const menuItem: any = {
         text: item.AnalysisName,
         items: hasChildren ? this.generateMenuItems(item.Childs) : [],
       };
-  
+
       if (!hasChildren) {
         menuItem.onClick = () => this.onItemSelect(item);
       }
-  
+
       return menuItem;
     });
   }
@@ -202,16 +225,13 @@ export class AnalyticControlComponent {
   onItemSelect(item: any) {
     this.dropdownText = item.FullName;
     if (item.FullName !== undefined) {
-      this.dropDownButton.instance.close();  
-
+      this.dropDownButton.instance.close();
       this.selectedAnalysisId = item.id;
-      this.formData.analyticId = item.id;
-
-      this.getFields(item.FullName.replace(/\s*>\s*/g, '>'))
+      this.getFields(item.FullName.replace(/\s*>\s*/g, '>'));
     }
   }
 
-  getFields(value: any) {    
+  getFields(value: any) {
     this.apiService.GetFields(value).subscribe({
       next: (dataFromApi: any) => {
         try {
@@ -224,16 +244,15 @@ export class AnalyticControlComponent {
           const defaultFields = defaultString.split(',').map((f: string) => f.trim());
           const displayFields = rawDisplayFields.filter((f: any) => !defaultFields.includes(f));
 
-          conditionString = conditionString.split(',').map((field: string) => field.trim());
+          this.formData.conditionFields = conditionString.split(',').map((field: string) => field.trim());
 
-          this.storedFieldConfigs =  conditionString.map((field: any) => ({
+          this.storedFieldConfigs = this.formData.conditionFields.map((field: any) => ({
             dataField: field,
             dataType: 'string',
             filterOperations: ['=', '<>', 'contains']
           }));
 
           this.filterFields = [...this.storedFieldConfigs];
-
           this.displayFields = displayFields;
           this.defaultFields = defaultFields;
 
@@ -251,11 +270,10 @@ export class AnalyticControlComponent {
       }
     });
   }
-  
-  loadFieldLookups(){
+
+  loadFieldLookups() {
     this.storedFieldConfigs.forEach((fieldConfig: any) => {
       const fieldName = fieldConfig.dataField;
-
       this.apiService.GetColumnValues(fieldName, this.formData.selectServer).subscribe({
         next: (dataFromApi: any) => {
           try {
@@ -272,9 +290,7 @@ export class AnalyticControlComponent {
             };
 
             this.filterFields = [...this.storedFieldConfigs];
-
-          } catch (parseError) {
-          }
+          } catch {}
         },
         error: (err) => {
           console.error(`Failed to fetch column values for '${fieldName}':`, err);
@@ -282,10 +298,10 @@ export class AnalyticControlComponent {
       });
     });
   }
+
   onServerValueChanged = (e: any) => {
     this.filterValue = [];
     this.formData.selectServer = e.value;
-
     this.loadFieldLookups();
   };
 
@@ -293,10 +309,10 @@ export class AnalyticControlComponent {
   blnTableOutput: boolean = false;
   blnrelativetime: boolean = false;
 
-  saveControl(){
+  saveControl() {
     let fromDate = formatDate(this.formData.fromDate, 'yyyy-MM-dd HH:mm', 'en-US');
     let toDate = formatDate(this.formData.toDate, 'yyyy-MM-dd HH:mm', 'en-US');
-    let timePicker = formatDate(this.formData.timePicker, 'yyyy-MM-dd HH:mm:00', 'en-US');
+    let timePicker = formatDate(this.formData.timePicker, 'yyyy-MM-dd HH:mm:SS', 'en-US');
 
     this.blnChartOutput = this.formData.showControl.includes('Chart');
     this.blnTableOutput = this.formData.showControl.includes('Datatable');
@@ -309,50 +325,63 @@ export class AnalyticControlComponent {
     let whereConditionFormatted = '';
 
     try {
-      const parsed = rawCondition;
-      if (Array.isArray(parsed) && parsed.length === 3) {
-        const [field, operator, value] = parsed;
+      if (Array.isArray(rawCondition) && rawCondition.length === 3) {
+        const [field, operator, value] = rawCondition;
         whereConditionFormatted = `( ${field}${operator}'${value}' )`;
       }
     } catch (e) {
       console.error('Invalid where condition format', e);
     }
 
-    let data: any = {
-      "analysistype": this.formData.analyticId,
-      "fromtime": fromDate,
-      "totime": toDate,
-      "serverid": this.formData.selectServer,
-      "wherecondition": whereConditionFormatted,
-      "displaycolums": this.formData.defaultFields.join(','),
-      "blnOverTime": false,
-      "durationtype": null,
-      "blnchartoutput": this.blnChartOutput,
-      "blntableoutput": this.blnTableOutput,
-      "daterangetype": this.formData.queryType,
-      "lastnndays": this.formData.lastNValue.toString(),
-      "blnrelativetime": this.blnrelativetime,
-      "relativetime": timePicker
+    let apiPayload: any = {
+      analysistype: this.selectedAnalysisId,
+      fromtime: fromDate,
+      totime: toDate,
+      serverid: this.formData.selectServer,
+      wherecondition: whereConditionFormatted,
+      displaycolums: this.formData.defaultFields?.join(','),
+      blnOverTime: false,
+      durationtype: null,
+      blnchartoutput: this.blnChartOutput,
+      blntableoutput: this.blnTableOutput,
+      daterangetype: this.formData.queryType,
+      lastnndays: this.formData.lastNValue?.toString(),
+      blnrelativetime: this.blnrelativetime,
+      relativetime: timePicker
+    };
+
+     const windowCardId = this.formData.windowCardId;
+     var dataFromApiObj: any = {}
+
+     dataFromApiObj.WindowDetails = this.formData;
+     dataFromApiObj.apiPayload = apiPayload;
+
+     const existing = JSON.parse(localStorage.getItem("AT_Properties") || '{}');
+
+    const updatedStorage = {
+      ...existing,
+      WindowGroups: Array.isArray(existing.WindowGroups) ? existing.WindowGroups : []
+    };
+
+    const existingIndex = updatedStorage.WindowGroups.findIndex((w: any) => w.windowCardId === windowCardId);
+
+    if (existingIndex >= 0) {
+      updatedStorage.WindowGroups[existingIndex] = {
+        windowCardId,
+        WindowDetails: dataFromApiObj
+      };
+    } else {
+      updatedStorage.WindowGroups.push({
+        windowCardId,
+        WindowDetails: dataFromApiObj
+      });
     }
 
-    this.apiService.GetAnalyticData(data).subscribe({
-      next: (dataFromApi: any) => {
-        let dataFromApiObj = JSON.parse(dataFromApi);
-        dataFromApiObj.WindowDetails = this.formData;
-
-        const dataToSave = {
-          WindowDetails: this.formData,
-          AnalysisData: dataFromApiObj
-        };
-
-        localStorage.setItem("Analysis", JSON.stringify(dataToSave));
-
-        this.route.navigate([`analytic/${this.selectedAnalysisId}`]);
-      }
-    })
+    localStorage.setItem("AT_Properties", JSON.stringify(updatedStorage));
+    this.location.back();
   }
 
-  cancelControl(){
+  cancelControl() {
     this.location.back();
   }
 }

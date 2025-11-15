@@ -24,10 +24,10 @@
   white-space: pre-wrap;
 }
 
-.dx-list {
-  border: 1px solid var(--dx-color-separator);
-  margin-top: 5px;
-}
+  .dx-list {
+    border: 1px solid var(--dx-color-separator);
+    margin-top: 5px;
+  }
 
 .button-container {
   display: flex;

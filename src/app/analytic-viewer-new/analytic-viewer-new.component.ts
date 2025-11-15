@@ -34,8 +34,6 @@ export class AnalyticViewerNewComponent implements OnInit {
         this.savedPageId = pageId;
         this.loadPageProperties(pageId);
         this.isUpdateMode = true;
-        console.log(this.isUpdateMode);
-
       } else {
         this.loadLocalCards();
         this.isUpdateMode = false;
@@ -53,10 +51,12 @@ export class AnalyticViewerNewComponent implements OnInit {
         
         const pageProperties = JSON.parse(parsed.pageproperties);
 
-        console.log(pageProperties)
-
         if (!localStorage.getItem("AT_Properties")) {
-          localStorage.setItem("AT_Properties", JSON.parse(pageProperties));
+          if (Array.isArray(pageProperties)) {
+            localStorage.setItem("AT_Properties", JSON.stringify(pageProperties));
+          } else {
+            localStorage.setItem("AT_Properties", pageProperties);
+          }
         }
 
         this.loadLocalCards();
@@ -69,7 +69,6 @@ export class AnalyticViewerNewComponent implements OnInit {
 
   loadLocalCards() {
     const storedData = localStorage.getItem('AT_Properties');
-    console.log(storedData);
     if (storedData) {
       const parsed = JSON.parse(storedData);
       const windowGroups = parsed.WindowGroups || [];
@@ -83,7 +82,7 @@ export class AnalyticViewerNewComponent implements OnInit {
         const chartType = details.WindowDetails?.chartType || 'bar';
         const showId = details.WindowDetails?.analyticId;
 
-        const allSeriesIds = ['60'];    
+        const allSeriesIds = ['60'];
 
         const chartSeries = (chartObj.series || []).map((s: any, index: number) => {
           let type = s.type;
@@ -107,7 +106,7 @@ export class AnalyticViewerNewComponent implements OnInit {
           }
         };
 
-        console.log(details)
+        console.log(details);
 
         if(showId == '62') {
           this.eeumaGridData(details);

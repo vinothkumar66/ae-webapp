@@ -1,301 +1,265 @@
-
-<div class="analysis-header">
+<div class="top-bar">
   <span>Analytic Viewer</span>
 
-  <div class="button-container">
-    <dx-button text="Add Control" icon="add" type="default" (onClick)="onAddClicked()"></dx-button>
-    <dx-button text="Save" icon="save" type="success" (onClick)="onSaveClicked()"></dx-button>
+  <div class="buttons">
+    <dx-button text="Add Control" icon="add" type="default" (onClick)="addCard()"></dx-button>
+    <dx-button text="Save" icon="save" type="success" *ngIf="this.isUpdateMode == false" (onClick)="openSavePopup()"></dx-button>
+    <dx-button text="Update" icon="refresh" type="success" *ngIf="this.isUpdateMode == true" (onClick)="updatePage()"></dx-button>
   </div>
 </div>
 
-<div *ngIf="dataFromStorage">
-  <div class="card">
+<div class="card-container">
+  <div *ngIf="!cards || cards.length === 0" class="no-cards">
+    No Windows Available
+  </div>
+
+  <div class="card" *ngFor="let card of cards">
     <div class="card-header">
-      <div>
-        <span>{{ cardTitle }}</span> - <span style="color: var(--dx-color-icon);"> {{ analyticType }}</span>
-      </div>
-      <div class="card-header-buttons">
-        <dx-button icon="preferences" (onClick)="onSettingsClicked()"></dx-button>
-        <dx-button icon="trash" (onClick)="onDeleteClicked()"></dx-button>
+      <span class="card-title">{{ card.title || 'Card Title' }}</span>
+      <div class="card-actions">
+        <dx-button icon="overflow" type="normal" stylingMode="text" (onClick)="configureCard(card.id)"></dx-button>
+        <dx-button icon="close" type="danger" stylingMode="text" (onClick)="removeCard(card.id)"></dx-button>
       </div>
     </div>
 
-    <div class="card-body" *ngIf="showId == 55 || showId == 56">
-      <div class="chart-container"
-        *ngIf="showChartOnly">
-        <dx-chart [dataSource]="chartData" [export]="{ enabled: true }">
-          <dxo-legend [visible]="false"></dxo-legend>
- 
-          <dxi-series *ngFor="let series of chartSeries"
-            [type]="series.type"
-            [argumentField]="series.argumentField"
-            [valueField]="series.valueField"
-            [name]="series.name">
-          </dxi-series>
-
-          <dxi-value-axis *ngFor="let axis of chartAxis"
-            [position]="axis.position"
-            [title]="axis.title"
-            [showZero]="axis.showZero"
-            [tickInterval]="axis.tickInterval"
-            [valueMarginsEnabled]="axis.valueMarginsEnabled"
-            [constantLines]="axis.constantLines">
-          </dxi-value-axis>
-        </dx-chart>
-      </div>
-
-      <div class="table-container"
-        *ngIf="showTableOnly">
-        <dx-data-grid [remoteOperations]="true" [columnWidth]="200" [dataSource]="tableData" [showBorders]="true" [rowAlternationEnabled]="true" [export]="{ enabled: true }">
-          <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[5, 10, 'all']" [showInfo]="true" [showNavigationButtons]="true" [displayMode]="'full'"></dxo-pager>
-          <dxo-paging [enabled]="true" [pageSize]="5"></dxo-paging>
-          <dxo-search-panel [visible]="true" [highlightCaseSensitive]="true"></dxo-search-panel>
-          <dxi-column *ngFor="let column of tableColumns" [dataField]="column"></dxi-column>
+    <div class="card-body">
+      <ng-container *ngIf="card.showId  == '62'">
+        <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
+          [dataSource]="eeumaData"
+          [showBorders]="true"
+          [cellHintEnabled]="true"
+          [rowAlternationEnabled]="true"
+          [export]="{ enabled: true }"
+          (onToolbarPreparing)="onToolbarPreparing($event)"
+        >
+          <dxo-paging [enabled]="false"></dxo-paging>
+          <dxi-column dataField="Metric" caption="Metric" width="500" cssClass="center-header"></dxi-column>
+          <dxi-column caption="Target" cssClass="center-header">
+            <dxi-column dataField="Col1" caption="Min" cssClass="center-header"></dxi-column>
+            <dxi-column dataField="Col2" caption="Max" cssClass="center-header"></dxi-column>
+          </dxi-column>
+          <dxi-column dataField="Col3" caption="Value" cssClass="center-header"></dxi-column>
         </dx-data-grid>
-      </div>
-    </div>
 
-    <div class="card-body" *ngIf="showId == 74">
-      <div id="">
-        <div class="barchart">
-          <div class="row">
-            <div class="col">
-              <dx-chart
-                title="Alarm Performance Indication Overtime Steady State"
-                [dataSource]="alarm_metrics_barchart"
-                [customizePoint]="customizeBarchartPoint"
-              >
-              <ng-container *ngIf="alarm_metrics_barchart && alarm_metrics_barchart.length">
-                <ng-container *ngFor="let area of getUniqueAreas(alarm_metrics_barchart)">
-                  <dxi-series valueField="{{ area }}" name="{{ area }}" color="{{ getColor(area) }}"></dxi-series>
-                </ng-container>
-              </ng-container>
-                <dxo-common-series-settings
-                  argumentField="date"
-                  type="bar"
-                  [barWidth]="45"
-                >
-                </dxo-common-series-settings>
-                <dxo-tooltip
-                  [enabled]="true"
-                  [customizeTooltip]="customizebarchartTooltip"
-                ></dxo-tooltip>
-                <dxo-margin [bottom]="20"></dxo-margin>
-                <dxi-value-axis [wholeRange]="[0, 16]"
-                [tickInterval]="3.5">
-                  <dxo-label
-                    [customizeText]="customizeText1"
-                  ></dxo-label>
-                </dxi-value-axis>
-                <dxo-argument-axis>
-                  <dxo-grid [visible]="true"></dxo-grid>
-                </dxo-argument-axis>
-                <dxo-legend
-                  verticalAlignment="bottom"
-                  horizontalAlignment="center"
-                >
-                </dxo-legend>
-              </dx-chart>
+        <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
+          [dataSource]="eeumacalcu"
+          [showBorders]="true"
+          [cellHintEnabled]="true"
+          [rowAlternationEnabled]="true"
+          class="eeumacalcu"
+          (onToolbarPreparing)="onToolbarEeumacalcu($event)"
+        >
+        </dx-data-grid>
+      </ng-container>
+
+      <ng-container *ngIf="card.showId == '63'">
+        <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
+          [dataSource]="iecData"
+          [showBorders]="true"
+          [cellHintEnabled]="true"
+          [rowAlternationEnabled]="true"
+          [export]="{ enabled: true }"
+          (onToolbarPreparing)="onToolbarPreparing($event)"
+          (onCellPrepared)="onCellPrepared($event)"
+        >
+          <dxo-paging [enabled]="false"></dxo-paging>
+          <dxi-column caption="Alarms Performance Metrics" cssClass="center-header">
+            <dxi-column dataField="Metric" caption="Metric" cssClass="center-header"></dxi-column>
+            <dxi-column caption="Target" cssClass="center-header">
+              <dxi-column dataField="Target1" caption="Target 1" cssClass="table-hidden center-header"></dxi-column>
+              <dxi-column dataField="Target2" caption="Target 2" cssClass="table-hidden center-header"></dxi-column>
+            </dxi-column>
+            <dxi-column dataField="Col1" caption="Value" cssClass="center-header" width="150"></dxi-column>
+          </dxi-column>
+        </dx-data-grid>
+      </ng-container>
+
+      <ng-container *ngIf="card.showId == '73'">
+        <dx-chart
+          [dataSource]="AlmChartData"
+          [valueAxis]="valueAxisConfig"
+          [argumentAxis]="{ argumentType: 'string', title: 'Area', discreteAxisDivisionMode: 'crossLabels' }"
+          [export]="{ enabled: true }"
+        >
+          <dxi-series
+            *ngFor="let series of seriesData"
+            [valueField]="series.valueField"
+            argumentField="Area"
+            [name]="series.name"
+            type="bar"
+            [color]="series.color"
+          ></dxi-series>
+        </dx-chart>
+      </ng-container>
+
+      <ng-container *ngIf="card.showId == '64'">
+        <div class="AlmDash">
+          <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
+            [dataSource]="AlmDashboardData"
+            [showBorders]="true"
+            [cellHintEnabled]="true"
+            [rowAlternationEnabled]="true"
+          >
+            <dxo-paging [enabled]="false"></dxo-paging>
+            <dxi-column dataField="Area" caption="Area" cssClass="center-header"></dxi-column>
+            <dxi-column caption="DAET" dataField="DAET_Count" cssClass="center-header">
+              <ng-template let-data="data" dxTemplate="cell">
+                <span>
+                  <dx-button icon="preferences"></dx-button>
+                  {{ data.DAET_Count }}
+                </span>
+              </ng-template>
+            </dxi-column>
+            <dxi-column dataField="AFM_Count" caption="AFM" cssClass="center-header"></dxi-column>
+          </dx-data-grid>
+
+          <div class="AlmDash-main">
+            <div class="AlmDash-Content">
+              <div>AFM: Alarm Flood Metric</div><br>
+              <span>Number of hours in the month that had any periods exceeding 10 alarms in 10 minutes.</span>
             </div>
-            <div class="col">
-              <dx-chart
-                title="Alarm Performance Indication Overtime Upset State"
-                [dataSource]="
-                  alarm_metrics_barchart_upset_state
-                "
-                [customizePoint]="customizeBarchartPoint"
-              >
-              <ng-container *ngIf="alarm_metrics_barchart_upset_state && alarm_metrics_barchart_upset_state.length">
-                <ng-container *ngFor="let area of getUniqueAreas(alarm_metrics_barchart_upset_state)">
-                  <dxi-series valueField="{{ area }}" name="{{ area }}" color="{{ getColor2(area) }}"></dxi-series>
-                </ng-container>
-              </ng-container>
-
-                <dxo-common-series-settings
-                  argumentField="date"
-                  type="bar"
-                  [barWidth]="45"
-                >
-                </dxo-common-series-settings>
-                <dxo-tooltip
-                  [enabled]="true"
-                  [customizeTooltip]="customizebarchartTooltip"
-                ></dxo-tooltip>
-                <dxo-margin [bottom]="20"></dxo-margin>
-                <dxi-value-axis  [wholeRange]="[0, 16]"
-                [tickInterval]="3.5">
-                  <dxo-label
-                    [customizeText]="customizeText1"
-                  ></dxo-label>
-                </dxi-value-axis>
-                <dxo-argument-axis>
-                  <dxo-grid [visible]="true"></dxo-grid>
-                </dxo-argument-axis>
-                <dxo-legend
-                  verticalAlignment="bottom"
-                  horizontalAlignment="center"
-                >
-                </dxo-legend>
-              </dx-chart>
+            <div class="AlmDash-Content">
+              <div>DAET: Days Alarms Exceed Target</div><br>
+              <span>Number of days in the month that exceeded 300 alarms.</span>
             </div>
           </div>
         </div>
+      </ng-container>
 
-        <div class="areachart">
-          <div class="row">
-            <div class="col">
-              <dx-chart
-                title="Steady State Alarm Performance"
-                [dataSource]="alarm_metrics1"
-                [customizePoint]="customizePoint"
-              >
-                <dxi-series
-                  valueField="overload"
-                  name="overload"
-                  color="red"
-                  argumentField="state"
-                ></dxi-series>
-                <dxi-series
-                  valueField="reactive"
-                  name="reactive"
-                  color="#fdec30"
-                  argumentField="state"
-                ></dxi-series>
-                <dxi-series
-                  valueField="stable"
-                  name="stable"
-                  color="#c1e887"
-                  argumentField="state"
-                ></dxi-series>
-                <dxi-series
-                  valueField="robust"
-                  name="robust"
-                  color="#187233"
-                  argumentField="state"
-                ></dxi-series>
-                <dxi-series
-                valueField="state_percent_outside_target_avg_value"
-                argumentField="state_avg"
-                name="Steady_State_Scatter_series"
-                type="scatter"
-              >
-                <dxo-point
-                  ><dxo-image
-                    url="../../assets/s_images.png"
-                  ></dxo-image
-                ></dxo-point>
-              </dxi-series>
-              <dxi-series
-                valueField="percent_outside_target_avg_value"
-                name="Scatter_Series"
-                argumentField="avg"
-                type="scatter"
-              >
-                <dxo-point [size]="7">
-                  <dxo-border
-                    [visible]="true"
-                    color="black"
-                  ></dxo-border>
-                </dxo-point>
-              </dxi-series>
+      <ng-container *ngIf="card.showId == '74'">
+        <div id="">
+          <div class="barchart">
+            <div class="row">
+              <div class="col">
+                <dx-chart
+                  title="Alarm Performance Indication Overtime Steady State"
+                  [dataSource]="alarm_metrics_barchart"
+                  [customizePoint]="customizeBarchartPoint"
+                >
+                <ng-container *ngIf="alarm_metrics_barchart && alarm_metrics_barchart.length">
+                  <ng-container *ngFor="let area of getUniqueAreas(alarm_metrics_barchart)">
+                    <dxi-series valueField="{{ area }}" name="{{ area }}" color="{{ getColor(area) }}"></dxi-series>
+                  </ng-container>
+                </ng-container>
+                  <dxo-common-series-settings
+                    argumentField="date"
+                    type="bar"
+                    [barWidth]="45"
+                  >
+                  </dxo-common-series-settings>
+                  <dxo-tooltip
+                    [enabled]="true"
+                    [customizeTooltip]="customizebarchartTooltip"
+                  ></dxo-tooltip>
+                  <dxo-margin [bottom]="20"></dxo-margin>
+                  <dxi-value-axis [wholeRange]="[0, 16]"
+                  [tickInterval]="3.5">
+                    <dxo-label
+                      [customizeText]="customizeText1"
+                    ></dxo-label>
+                  </dxi-value-axis>
+                  <dxo-argument-axis>
+                    <dxo-grid [visible]="true"></dxo-grid>
+                  </dxo-argument-axis>
+                  <dxo-legend
+                    verticalAlignment="bottom"
+                    horizontalAlignment="center"
+                  >
+                  </dxo-legend>
+                </dx-chart>
+              </div>
+              <div class="col">
+                <dx-chart
+                  title="Alarm Performance Indication Overtime Upset State"
+                  [dataSource]="
+                    alarm_metrics_barchart_upset_state
+                  "
+                  [customizePoint]="customizeBarchartPoint"
+                >
+                <ng-container *ngIf="alarm_metrics_barchart_upset_state && alarm_metrics_barchart_upset_state.length">
+                  <ng-container *ngFor="let area of getUniqueAreas(alarm_metrics_barchart_upset_state)">
+                    <dxi-series valueField="{{ area }}" name="{{ area }}" color="{{ getColor2(area) }}"></dxi-series>
+                  </ng-container>
+                </ng-container>
 
-              <dxo-tooltip
-                  [enabled]="true"
-                  location="edge"
-                  [customizeTooltip]="customizeTooltip"
-                >
-                </dxo-tooltip>
-
-                <dxo-common-series-settings
-                  #commonSeries
-                  type="area"
-                >
-                  <dxo-hover-style>
-                    <dxo-hatching
-                      direction="none"
-                    ></dxo-hatching>
-                  </dxo-hover-style>
-                </dxo-common-series-settings>
-                <dxi-value-axis
-                  [wholeRange]="[0, 80]"
-                  [valueMarginsEnabled]="false"
-                >
-                  <dxo-label
-                    [customizeText]="
-                      customizeTextAreaChartSteadyStateVal
-                    "
-                  ></dxo-label>
-                  <dxo-title text="%Timeout Above Target Value (<10)"></dxo-title>
-                </dxi-value-axis>
-                <dxo-argument-axis
-                  [valueMarginsEnabled]="false"
-                  [wholeRange]="[0, 80]"
-                  [tickInterval]="20"
-                >
-                  <dxo-grid [visible]="true"></dxo-grid>
-                  <dxo-label
-                    [customizeText]="
-                      customizeTextAreaChartSteadyStateArg
-                    "
-                  ></dxo-label>
-                  <dxo-title text="Average Alarm Rate"></dxo-title>
-                </dxo-argument-axis>
-
-                <dxo-legend
-                  verticalAlignment="top"
-                  horizontalAlignment="right"
-                  [visible]="true"
-                  [customizeItems]="customLegendItems"
-                >
-                </dxo-legend>
-              </dx-chart>
+                  <dxo-common-series-settings
+                    argumentField="date"
+                    type="bar"
+                    [barWidth]="45"
+                  >
+                  </dxo-common-series-settings>
+                  <dxo-tooltip
+                    [enabled]="true"
+                    [customizeTooltip]="customizebarchartTooltip"
+                  ></dxo-tooltip>
+                  <dxo-margin [bottom]="20"></dxo-margin>
+                  <dxi-value-axis  [wholeRange]="[0, 16]"
+                  [tickInterval]="3.5">
+                    <dxo-label
+                      [customizeText]="customizeText1"
+                    ></dxo-label>
+                  </dxi-value-axis>
+                  <dxo-argument-axis>
+                    <dxo-grid [visible]="true"></dxo-grid>
+                  </dxo-argument-axis>
+                  <dxo-legend
+                    verticalAlignment="bottom"
+                    horizontalAlignment="center"
+                  >
+                  </dxo-legend>
+                </dx-chart>
+              </div>
             </div>
-            <div class="col">
-              <dx-chart
-                title="Upset State Alarm Performance"
-                [dataSource]="alarm_metrics2"
-                [customizePoint]="customizePoint"
-              >
+          </div>
+
+          <div class="areachart">
+            <div class="row">
+              <div class="col">
+                <dx-chart
+                  title="Steady State Alarm Performance"
+                  [dataSource]="alarm_metrics1"
+                  [customizePoint]="customizePoint"
+                >
+                  <dxi-series
+                    valueField="overload"
+                    name="overload"
+                    color="red"
+                    argumentField="state"
+                  ></dxi-series>
+                  <dxi-series
+                    valueField="reactive"
+                    name="reactive"
+                    color="#fdec30"
+                    argumentField="state"
+                  ></dxi-series>
+                  <dxi-series
+                    valueField="stable"
+                    name="stable"
+                    color="#c1e887"
+                    argumentField="state"
+                  ></dxi-series>
+                  <dxi-series
+                    valueField="robust"
+                    name="robust"
+                    color="#187233"
+                    argumentField="state"
+                  ></dxi-series>
+                  <dxi-series
+                  valueField="state_percent_outside_target_avg_value"
+                  argumentField="state_avg"
+                  name="Steady_State_Scatter_series"
+                  type="scatter"
+                >
+                  <dxo-point
+                    ><dxo-image
+                      url="../../assets/s_images.png"
+                    ></dxo-image
+                  ></dxo-point>
+                </dxi-series>
                 <dxi-series
-                  valueField="overload"
-                  name="overload"
-                  color="#ec1834"
-                  argumentField="state"
-                ></dxi-series>
-                <dxi-series
-                  valueField="reactive"
-                  name="reactive"
-                  color="#fdec30"
-                  argumentField="state"
-                ></dxi-series>
-                <dxi-series
-                  valueField="stable"
-                  name="stable"
-                  color="#c1e887"
-                  argumentField="state"
-                ></dxi-series>
-                <dxi-series
-                  valueField="robust"
-                  name="robust"
-                  color="#187233"
-                  argumentField="state"
-                ></dxi-series>
-                <dxi-series
-                valueField="state_percent_outside_target"
-                argumentField="state_max"
-                name="Upset_State_Scatter_series"
-                type="scatter"
-              >
-                <dxo-point
-                  ><dxo-image
-                    url="../../assets/u_image.png"
-                  ></dxo-image
-                ></dxo-point>
-              </dxi-series>
-                <dxi-series
-                  valueField="percent_outside_target"
+                  valueField="percent_outside_target_avg_value"
                   name="Scatter_Series"
-                  argumentField="max"
+                  argumentField="avg"
                   type="scatter"
                 >
                   <dxo-point [size]="7">
@@ -305,508 +269,478 @@
                     ></dxo-border>
                   </dxo-point>
                 </dxi-series>
-          
-                <dxo-tooltip
-                  [enabled]="true"
-                  location="edge"
-                  [customizeTooltip]="customizeTooltipUpsetState"
-                >
-                </dxo-tooltip>
-                <dxo-common-series-settings
-                  #commonSeries
-                  type="area"
-                >
-                  <dxo-hover-style>
-                    <dxo-hatching
-                      direction="none"
-                    ></dxo-hatching>
-                  </dxo-hover-style>
-                </dxo-common-series-settings>
-                <dxi-value-axis
-                  [wholeRange]="[0, 80]"
-                  [valueMarginsEnabled]="false"
-                >
-                  <dxo-label
-                    [customizeText]="
-                      customizeTextAreaChartUpsetVal
-                    "
-                  ></dxo-label>
-                  <dxo-title text="%Timeout Above Target Value (>10)"></dxo-title>
-                </dxi-value-axis>
-                <dxo-argument-axis
-                  [valueMarginsEnabled]="false"
-                  [wholeRange]="[0, 40]"
-                  [tickInterval]="10"
-                >
-                  <dxo-grid [visible]="true"></dxo-grid>
-                  <dxo-label
-                    [customizeText]="
-                      customizeTextAreaChartUpsetArg
-                    "
-                  ></dxo-label>
-                  <dxo-title text="Max Alarm Rate"></dxo-title>
-                </dxo-argument-axis>
 
-                <dxo-legend
-                  verticalAlignment="top"
-                  horizontalAlignment="right"
-                  [visible]="true"
-                  [customizeItems]="customLegendItems"
+                <dxo-tooltip
+                    [enabled]="true"
+                    location="edge"
+                    [customizeTooltip]="customizeTooltip"
+                  >
+                  </dxo-tooltip>
+
+                  <dxo-common-series-settings
+                    #commonSeries
+                    type="area"
+                  >
+                    <dxo-hover-style>
+                      <dxo-hatching
+                        direction="none"
+                      ></dxo-hatching>
+                    </dxo-hover-style>
+                  </dxo-common-series-settings>
+                  <dxi-value-axis
+                    [wholeRange]="[0, 80]"
+                    [valueMarginsEnabled]="false"
+                  >
+                    <dxo-label
+                      [customizeText]="
+                        customizeTextAreaChartSteadyStateVal
+                      "
+                    ></dxo-label>
+                    <dxo-title text="%Timeout Above Target Value (<10)"></dxo-title>
+                  </dxi-value-axis>
+                  <dxo-argument-axis
+                    [valueMarginsEnabled]="false"
+                    [wholeRange]="[0, 80]"
+                    [tickInterval]="20"
+                  >
+                    <dxo-grid [visible]="true"></dxo-grid>
+                    <dxo-label
+                      [customizeText]="
+                        customizeTextAreaChartSteadyStateArg
+                      "
+                    ></dxo-label>
+                    <dxo-title text="Average Alarm Rate"></dxo-title>
+                  </dxo-argument-axis>
+
+                  <dxo-legend
+                    verticalAlignment="top"
+                    horizontalAlignment="right"
+                    [visible]="true"
+                    [customizeItems]="customLegendItems"
+                  >
+                  </dxo-legend>
+                </dx-chart>
+              </div>
+              <div class="col">
+                <dx-chart
+                  title="Upset State Alarm Performance"
+                  [dataSource]="alarm_metrics2"
+                  [customizePoint]="customizePoint"
                 >
-                </dxo-legend>
-              </dx-chart>
+                  <dxi-series
+                    valueField="overload"
+                    name="overload"
+                    color="#ec1834"
+                    argumentField="state"
+                  ></dxi-series>
+                  <dxi-series
+                    valueField="reactive"
+                    name="reactive"
+                    color="#fdec30"
+                    argumentField="state"
+                  ></dxi-series>
+                  <dxi-series
+                    valueField="stable"
+                    name="stable"
+                    color="#c1e887"
+                    argumentField="state"
+                  ></dxi-series>
+                  <dxi-series
+                    valueField="robust"
+                    name="robust"
+                    color="#187233"
+                    argumentField="state"
+                  ></dxi-series>
+                  <dxi-series
+                  valueField="state_percent_outside_target"
+                  argumentField="state_max"
+                  name="Upset_State_Scatter_series"
+                  type="scatter"
+                >
+                  <dxo-point
+                    ><dxo-image
+                      url="../../assets/u_image.png"
+                    ></dxo-image
+                  ></dxo-point>
+                </dxi-series>
+                  <dxi-series
+                    valueField="percent_outside_target"
+                    name="Scatter_Series"
+                    argumentField="max"
+                    type="scatter"
+                  >
+                    <dxo-point [size]="7">
+                      <dxo-border
+                        [visible]="true"
+                        color="black"
+                      ></dxo-border>
+                    </dxo-point>
+                  </dxi-series>
+            
+                  <dxo-tooltip
+                    [enabled]="true"
+                    location="edge"
+                    [customizeTooltip]="customizeTooltipUpsetState"
+                  >
+                  </dxo-tooltip>
+                  <dxo-common-series-settings
+                    #commonSeries
+                    type="area"
+                  >
+                    <dxo-hover-style>
+                      <dxo-hatching
+                        direction="none"
+                      ></dxo-hatching>
+                    </dxo-hover-style>
+                  </dxo-common-series-settings>
+                  <dxi-value-axis
+                    [wholeRange]="[0, 80]"
+                    [valueMarginsEnabled]="false"
+                  >
+                    <dxo-label
+                      [customizeText]="
+                        customizeTextAreaChartUpsetVal
+                      "
+                    ></dxo-label>
+                    <dxo-title text="%Timeout Above Target Value (>10)"></dxo-title>
+                  </dxi-value-axis>
+                  <dxo-argument-axis
+                    [valueMarginsEnabled]="false"
+                    [wholeRange]="[0, 40]"
+                    [tickInterval]="10"
+                  >
+                    <dxo-grid [visible]="true"></dxo-grid>
+                    <dxo-label
+                      [customizeText]="
+                        customizeTextAreaChartUpsetArg
+                      "
+                    ></dxo-label>
+                    <dxo-title text="Max Alarm Rate"></dxo-title>
+                  </dxo-argument-axis>
+
+                  <dxo-legend
+                    verticalAlignment="top"
+                    horizontalAlignment="right"
+                    [visible]="true"
+                    [customizeItems]="customLegendItems"
+                  >
+                  </dxo-legend>
+                </dx-chart>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </ng-container>
 
-    <div class="card-body" *ngIf="showId == 75">
-       <div class="dx-viewport">
-          <div class="kpicharts">
-            <ng-container
-              *ngFor="let dataset of productionData"
-            >
-
-            <dx-polar-chart
-                id="polar-chart"
-                class="polar_chart"
-                [dataSource]="dataset.data"
+      <ng-container *ngIf="card.showId == '75'">
+        <div class="dx-viewport">
+            <div class="kpicharts">
+              <ng-container
+                *ngFor="let dataset of productionData"
               >
-              <dxo-title [text]="dataset.area" [subtitle]="dataset.date">
-                <dxo-font size="small" color="black"></dxo-font>
-              </dxo-title>
-                <dxo-value-axis [visualRange]="[0, 95]">
-                  <dxi-strip
-                    [startValue]="0"
-                    [endValue]="20"
-                    color="lightgreen"
-                  ></dxi-strip>
-                  <dxi-strip
-                    [startValue]="20"
-                    [endValue]="40"
-                    color="yellow"
-                  ></dxi-strip>
-                  <dxi-strip
-                    [startValue]="40"
-                    [endValue]="60"
-                    color="skyblue"
-                  ></dxi-strip>
-                  <dxi-strip
-                    [startValue]="60"
-                    [endValue]="80"
-                    color="orange"
-                  ></dxi-strip>
-                  <dxi-strip
-                    [startValue]="80"
-                    [endValue]="100"
-                    color="pink"
-                  ></dxi-strip>
-                </dxo-value-axis>
 
-                <dxo-legend [visible]="false"></dxo-legend>
-                <dxi-series
-                  valueField="val1"
-                  color="#ba4d51"
-                ></dxi-series>
+              <dx-polar-chart
+                  id="polar-chart"
+                  class="polar_chart"
+                  [dataSource]="dataset.data"
+                >
+                <dxo-title [text]="dataset.area" [subtitle]="dataset.date">
+                  <dxo-font size="small" color="black"></dxo-font>
+                </dxo-title>
+                  <dxo-value-axis [visualRange]="[0, 95]">
+                    <dxi-strip
+                      [startValue]="0"
+                      [endValue]="20"
+                      color="lightgreen"
+                    ></dxi-strip>
+                    <dxi-strip
+                      [startValue]="20"
+                      [endValue]="40"
+                      color="yellow"
+                    ></dxi-strip>
+                    <dxi-strip
+                      [startValue]="40"
+                      [endValue]="60"
+                      color="skyblue"
+                    ></dxi-strip>
+                    <dxi-strip
+                      [startValue]="60"
+                      [endValue]="80"
+                      color="orange"
+                    ></dxi-strip>
+                    <dxi-strip
+                      [startValue]="80"
+                      [endValue]="100"
+                      color="pink"
+                    ></dxi-strip>
+                  </dxo-value-axis>
 
-                <dxo-common-series-settings
-                  #seriesSettings
-                  type="line"
-                ></dxo-common-series-settings>
-                <dxo-tooltip [enabled]="true"></dxo-tooltip>
-                <dxo-common-axis-settings>
-                  <dxo-tick [visible]="true" color="black"></dxo-tick>
-              </dxo-common-axis-settings>
-              </dx-polar-chart>
-            </ng-container>
+                  <dxo-legend [visible]="false"></dxo-legend>
+                  <dxi-series
+                    valueField="val1"
+                    color="#ba4d51"
+                  ></dxi-series>
+
+                  <dxo-common-series-settings
+                    #seriesSettings
+                    type="line"
+                  ></dxo-common-series-settings>
+                  <dxo-tooltip [enabled]="true"></dxo-tooltip>
+                  <dxo-common-axis-settings>
+                    <dxo-tick [visible]="true" color="black"></dxo-tick>
+                </dxo-common-axis-settings>
+                </dx-polar-chart>
+              </ng-container>
+            </div>
           </div>
-        </div>
-    </div>
+      </ng-container>
 
-    <div class="card-body" *ngIf="showId == 62">
-      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
-        [dataSource]="eeumaData"
-        [showBorders]="true"
-        [cellHintEnabled]="true"
-        [rowAlternationEnabled]="true"
-        [export]="{ enabled: true }"
-        (onToolbarPreparing)="onToolbarPreparing($event)"
-      >
-        <dxo-paging [enabled]="false"></dxo-paging>
-        <dxi-column dataField="Metric" caption="Metric" width="500" cssClass="center-header"></dxi-column>
-        <dxi-column caption="Target" cssClass="center-header">
-          <dxi-column dataField="Col1" caption="Min" cssClass="center-header"></dxi-column>
-          <dxi-column dataField="Col2" caption="Max" cssClass="center-header"></dxi-column>
-        </dxi-column>
-        <dxi-column dataField="Col3" caption="Value" cssClass="center-header"></dxi-column>
-      </dx-data-grid>
-
-      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
-        [dataSource]="eeumacalcu"
-        [showBorders]="true"
-        [cellHintEnabled]="true"
-        [rowAlternationEnabled]="true"
-        class="eeumacalcu"
-        (onToolbarPreparing)="onToolbarEeumacalcu($event)"
-      >
-      </dx-data-grid>
-    </div>
-
-    <div class="card-body" *ngIf="showId == 63">
-      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
-        [dataSource]="iecData"
-        [showBorders]="true"
-        [cellHintEnabled]="true"
-        [rowAlternationEnabled]="true"
-        [export]="{ enabled: true }"
-        (onToolbarPreparing)="onToolbarPreparing($event)"
-        (onCellPrepared)="onCellPrepared($event)"
-      >
-        <dxo-paging [enabled]="false"></dxo-paging>
-        <dxi-column caption="Alarms Performance Metrics" cssClass="center-header">
-          <dxi-column dataField="Metric" caption="Metric" cssClass="center-header"></dxi-column>
-          <dxi-column caption="Target" cssClass="center-header">
-            <dxi-column dataField="Target1" caption="Target 1" cssClass="table-hidden center-header"></dxi-column>
-            <dxi-column dataField="Target2" caption="Target 2" cssClass="table-hidden center-header"></dxi-column>
-          </dxi-column>
-          <dxi-column dataField="Col1" caption="Value" cssClass="center-header" width="150"></dxi-column>
-        </dxi-column>
-      </dx-data-grid>
-    </div>
-
-    <div class="card-body" *ngIf="showId == 73">
-      <dx-chart
-        [dataSource]="AlmChartData"
-        [valueAxis]="valueAxisConfig"
-        [argumentAxis]="{ argumentType: 'string', title: 'Area', discreteAxisDivisionMode: 'crossLabels' }"
-        [export]="{ enabled: true }"
-      >
-        <dxi-series
-          *ngFor="let series of seriesData"
-          [valueField]="series.valueField"
-          argumentField="Area"
-          [name]="series.name"
-          type="bar"
-          [color]="series.color"
-        ></dxi-series>
-      </dx-chart>
-    </div>
-
-    <div class="card-body AlmDash" *ngIf="showId == 64">
-      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
-        [dataSource]="AlmDashboardData"
-        [showBorders]="true"
-        [cellHintEnabled]="true"
-        [rowAlternationEnabled]="true"
-        width="100%"
-      >
-        <dxo-paging [enabled]="false"></dxo-paging>
-        <dxi-column dataField="Area" caption="Area" cssClass="center-header"></dxi-column>
-        <dxi-column caption="DAET" dataField="DAET_Count" cssClass="center-header">
-          <ng-template let-data="data" dxTemplate="cell">
-            <span>
-              <dx-button icon="preferences"></dx-button>
-              {{ data.DAET_Count }}
-            </span>
-          </ng-template>
-        </dxi-column>
-        <dxi-column dataField="AFM_Count" caption="AFM" cssClass="center-header"></dxi-column>
-      </dx-data-grid>
-
-      <div class="AlmDash-main">
-        <div class="AlmDash-Content">
-          <div>AFM: Alarm Flood Metric</div><br>
-          <span>Number of hours in the month that had any periods exceeding 10 alarms in 10 minutes.</span>
-        </div>
-        <div class="AlmDash-Content">
-          <div>DAET: Days Alarms Exceed Target</div><br>
-          <span>Number of days in the month that exceeded 300 alarms.</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="card-body" *ngIf="showId == 52 || showId == 54 || showId == 53">
-      <dx-chart
-        [dataSource]="AlmsPerOprPositionData"
-        [argumentAxis]="{ argumentType: 'string', title: 'Datetime', discreteAxisDivisionMode: 'crossLabels' }"
-        [export]="{ enabled: true }"
-        [valueAxis]="valueAxisConfig ? valueAxisConfig : undefined"
-      >
-        <dxi-series
-          *ngFor="let series of seriesData"
-          [valueField]="series.valueField"
-          [argumentField]="series.argumentField"
-          [name]="series.name"
-          type="bar"
-          [color]="series.color"
-        ></dxi-series>
-
-        <dxo-legend verticalAlignment="top" horizontalAlignment="center"></dxo-legend>
-      </dx-chart>
-
-      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
-        [dataSource]="AlmsPerOprPositionTableData"
-        [showBorders]="true"
-        [cellHintEnabled]="true"
-        [rowAlternationEnabled]="true"
-        [export]="{ enabled: true }"
-      >
-        <dxo-paging [pageSize]="5"></dxo-paging>
-        <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[5, 10, 'all']" [showInfo]="true" [showNavigationButtons]="true" [displayMode]="'full'"></dxo-pager>
-        <dxo-search-panel [visible]="true" [width]="240" placeholder="Search..."></dxo-search-panel>
-      </dx-data-grid>
-    </div>
-
-    <div class="card-body" *ngIf="showId == 61">
-      <dx-chart
-        [dataSource]="AlarmVsOperatorData[0].data"
-        [export]="{ enabled: true }"
-        [rotated]="false"
-      >
-        <dxo-legend [visible]="false"></dxo-legend>
-
-        <dxi-pane *ngFor="let pane of AlarmVsOperatorData[0].pane" [name]="pane.name"></dxi-pane>
-
-        <dxi-series
-          *ngFor="let series of AlarmVsOperatorData[0].series"
-          [type]="series.type"
-          [valueField]="series.valueField"
-          [argumentField]="series.argumentField"
-          [name]="series.name"
-          [pane]="series.pane"
+      <ng-container *ngIf="card.showId == '61'">
+        <dx-chart
+          [dataSource]="AlarmVsOperatorData[0].data"
+          [export]="{ enabled: true }"
+          [rotated]="false"
         >
-        </dxi-series>
+          <dxo-legend [visible]="false"></dxo-legend>
 
-        <dxi-value-axis
-          *ngFor="let axis of AlarmVsOperatorData[0].axis"
-          [position]="axis.position"
-          [pane]="axis.pane"
-          [tickInterval]="axis.tickInterval"
-          [valueMarginsEnabled]="axis.valueMarginsEnabled"
-          [showZero]="axis.showZero"
-        >
-          <dxo-title [text]="axis.title.text"></dxo-title>
-        </dxi-value-axis>
-      </dx-chart>
+          <dxi-pane *ngFor="let pane of AlarmVsOperatorData[0].pane" [name]="pane.name"></dxi-pane>
 
-      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
-        [dataSource]="AlarmVsOperatorTableData"
-        [showBorders]="true"
-        [cellHintEnabled]="true"
-        [rowAlternationEnabled]="true"
-        [export]="{ enabled: true }"
-      >
-        <dxo-paging [pageSize]="5"></dxo-paging>
-        <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[5, 10, 'all']" [showInfo]="true" [showNavigationButtons]="true" [displayMode]="'full'"></dxo-pager>
-        <dxo-search-panel [visible]="true" [width]="240" placeholder="Search..."></dxo-search-panel>
-      </dx-data-grid>
-    </div>
-
-    <div class="card-body" *ngIf="showId == 72 || showId == 50">
-      <dx-chart
-        [dataSource]="ChatteringData[0].data"
-        [export]="{ enabled: true }"
-      >
-        <dxo-legend [visible]="false"></dxo-legend>
-
-      </dx-chart>
-
-      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
-        [dataSource]="ChatteringTableData"
-        [showBorders]="true"
-        [cellHintEnabled]="true"
-        [rowAlternationEnabled]="true"
-        [export]="{ enabled: true }"
-      >
-        <dxo-paging [pageSize]="5"></dxo-paging>
-        <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[5, 10, 'all']" [showInfo]="true" [showNavigationButtons]="true" [displayMode]="'full'"></dxo-pager>
-        <dxo-search-panel [visible]="true" [width]="240" placeholder="Search..."></dxo-search-panel>
-      </dx-data-grid>
-    </div>
-
-    <div class="card-body" *ngIf="showId == 51">
-      <dx-chart
-        [dataSource]="FleedingData[0].data"
-        [export]="{ enabled: true }"
-      >
-        <dxi-series
-          *ngFor="let s of FleedingData[0].series"
-          [type]="s.type"
-          [argumentField]="s.argumentField"
-          [valueField]="s.valueField"
-          [name]="s.name"
-          [axis]="s.axis"
-        ></dxi-series>
-
-        <dxi-value-axis
-          *ngFor="let a of FleedingData[0].axis"
-          [position]="a.position"
-          [name]="a.name"
-          [showZero]="a.showZero"
-          [tickInterval]="a.tickInterval"
-          [valueMarginsEnabled]="a.valueMarginsEnabled"
-        >
-          <dxo-title [text]="a.title.text"></dxo-title>
-        </dxi-value-axis>
-
-        <dxo-legend verticalAlignment="top" horizontalAlignment="center"></dxo-legend>
-      </dx-chart>
-
-      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
-        [dataSource]="FleedingTableData"
-        [showBorders]="true"
-        [cellHintEnabled]="true"
-        [rowAlternationEnabled]="true"
-        [export]="{ enabled: true }"
-      >
-        <dxo-paging [pageSize]="5"></dxo-paging>
-        <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[5, 10, 'all']" [showInfo]="true" [showNavigationButtons]="true" [displayMode]="'full'"></dxo-pager>
-        <dxo-search-panel [visible]="true" [width]="240" placeholder="Search..."></dxo-search-panel>
-      </dx-data-grid>
-    </div>
-
-    <div class="card-body" *ngIf="showId == 60  || showId == 48 || showId == 49 || showId == 67">
-      <dx-chart
-        *ngIf="FloodData.length"
-        [dataSource]="FloodData[0].data"
-        [export]="{ enabled: true }"
-      >
-        <dxi-series
-          *ngFor="let s of FloodData[0].series"
-          [type]="s.type"
-          [argumentField]="s.argumentField"
-          [valueField]="s.valueField"
-          [name]="s.name"
-        ></dxi-series>
-
-        <dxo-value-axis>
-          <dxo-title [text]="FloodData[0].axis[0].title.text"></dxo-title>
-
-          <dxi-constant-line
-            *ngFor="let line of FloodData[0].axis[0].constantLines"
-            [value]="line.value"
-            [color]="line.color"
-            [width]="line.width"
-            [dashStyle]="line.dashStyle"
+          <dxi-series
+            *ngFor="let series of AlarmVsOperatorData[0].series"
+            [type]="series.type"
+            [valueField]="series.valueField"
+            [argumentField]="series.argumentField"
+            [name]="series.name"
+            [pane]="series.pane"
           >
-            <dxo-label
-              [visible]="line.label.visible"
-              [position]="line.label.position"
-              [text]="line.label.text"
-            >
-              <dxo-font
-                [color]="line.label.font.color"
-                [weight]="line.label.font.weight"
-                [size]="line.label.font.size"
-              ></dxo-font>
-            </dxo-label>
-          </dxi-constant-line>
-        </dxo-value-axis>
+          </dxi-series>
 
-        <dxo-legend verticalAlignment="top" horizontalAlignment="center"></dxo-legend>
-      </dx-chart>
+          <dxi-value-axis
+            *ngFor="let axis of AlarmVsOperatorData[0].axis"
+            [position]="axis.position"
+            [pane]="axis.pane"
+            [tickInterval]="axis.tickInterval"
+            [valueMarginsEnabled]="axis.valueMarginsEnabled"
+            [showZero]="axis.showZero"
+          >
+            <dxo-title [text]="axis.title.text"></dxo-title>
+          </dxi-value-axis>
+        </dx-chart>
 
-      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
-        [dataSource]="FloodTableData"
-        [showBorders]="true"
-        [cellHintEnabled]="true"
-        [rowAlternationEnabled]="true"
-        [export]="{ enabled: true }"
-      >
-        <dxo-paging [pageSize]="5"></dxo-paging>
-        <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[5, 10, 'all']" [showInfo]="true" [showNavigationButtons]="true" [displayMode]="'full'"></dxo-pager>
-        <dxo-search-panel [visible]="true" [width]="240" placeholder="Search..."></dxo-search-panel>
-      </dx-data-grid>
-    </div>
-
-    <div class="card-body" *ngIf="showId == 26 || showId == 30 || showId == 29 || showId == 27 || showId == 28 || showId == 1 || showId == 12 || showId == 9
-     || showId == 8 || showId == 5 || showId == 2 || showId == 11 || showId == 10 || showId == 6 || showId == 4 || showId == 7 || showId == 3 || showId == 33
-     || showId == 31 || showId == 76 || showId == 21 || showId == 18 || showId == 25 || showId == 24 || showId == 13 || showId == 14 || showId == 16 || showId == 17 || showId == 22
-     || showId == 15 || showId == 19 || showId == 20 || showId == 23 || showId == 32 || showId == 57 || showId == 58">
-      <dx-chart
-        [dataSource]="FrequencyData[0]?.data"
-        [export]="{ enabled: true }"
-      >
-        <dxo-common-series-settings argumentField="tagno.parameter"></dxo-common-series-settings>
-    
-        <dxi-series
-          *ngFor="let series of FrequencyData[0]?.series"
-          [type]="series.type"
-          [valueField]="series.valueField"
-          [name]="series.name"
-          [axis]="series.axis"
-        ></dxi-series>
-    
-        <dxi-value-axis
-          *ngFor="let ax of FrequencyData[0]?.axis"
-          [name]="ax.name"
-          [position]="ax.position"
-          [showZero]="ax.showZero"
-          [tickInterval]="ax.tickInterval"
-          [valueMarginsEnabled]="ax.valueMarginsEnabled"
+        <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
+          [dataSource]="AlarmVsOperatorTableData"
+          [showBorders]="true"
+          [cellHintEnabled]="true"
+          [rowAlternationEnabled]="true"
+          [export]="{ enabled: true }"
         >
-          <dxo-title [text]="ax.title.text"></dxo-title>
-        </dxi-value-axis>
-    
-        <dxo-legend verticalAlignment="top" horizontalAlignment="center"></dxo-legend>
-      </dx-chart>
-    
-      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
-        [dataSource]="FrequencyTableData"
-        [showBorders]="true"
-        [cellHintEnabled]="true"
-        [rowAlternationEnabled]="true"
-        [export]="{ enabled: true }"
-      >
-        <dxo-paging [pageSize]="5"></dxo-paging>
-        <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[5, 10, 'all']" [showInfo]="true" [showNavigationButtons]="true" [displayMode]="'full'"></dxo-pager>
-        <dxo-search-panel [visible]="true" [width]="240" placeholder="Search..."></dxo-search-panel>
-      </dx-data-grid>
-    </div>  
-    
-    <div class="card-body" *ngIf="showId == 77 || showId == 47 || showId == 45">
-      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
-        [dataSource]="SOETableData"
-        [showBorders]="true"
-        [cellHintEnabled]="true"
-        [rowAlternationEnabled]="true"
-        [export]="{ enabled: true }"
-      >
-        <dxo-paging [pageSize]="5"></dxo-paging>
-        <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[5, 10, 'all']" [showInfo]="true" [showNavigationButtons]="true" [displayMode]="'full'"></dxo-pager>
-        <dxo-search-panel [visible]="true" [width]="240" placeholder="Search..."></dxo-search-panel>
-      </dx-data-grid>
-    </div>
+          <dxo-paging [pageSize]="5"></dxo-paging>
+          <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[5, 10, 'all']" [showInfo]="true" [showNavigationButtons]="true" [displayMode]="'full'"></dxo-pager>
+          <dxo-search-panel [visible]="true" [width]="240" placeholder="Search..."></dxo-search-panel>
+        </dx-data-grid>
+      </ng-container>
 
-    <div class="card-body" *ngIf="showId == 46 || showId == 34 || showId == 35 || showId == 38 || showId == 39 || showId == 37 || showId == 36 || showId == 43 || showId == 44 || showId == 42 || showId == 41 || showId == 40">
-      <dx-chart
-        *ngIf="StandingACKData.length"
-        [dataSource]="StandingACKData[0].data"
-        [export]="{ enabled: true }"
-      >
-        <dxi-series
-          *ngFor="let s of StandingACKData[0].series"
-          [type]="s.type"
-          [argumentField]="s.argumentField"
-          [valueField]="s.valueField"
-          [name]="s.name"
-        ></dxi-series>
+       <ng-container *ngIf="card.showId == '46' && card.showId == '47'">
+        <dx-chart
+          *ngIf="StandingACKData.length"
+          [dataSource]="StandingACKData[0].data"
+          [export]="{ enabled: true }"
+        >
+          <dxi-series
+            *ngFor="let s of StandingACKData[0].series"
+            [type]="s.type"
+            [argumentField]="s.argumentField"
+            [valueField]="s.valueField"
+            [name]="s.name"
+          ></dxi-series>
 
-        <dxo-legend verticalAlignment="top" horizontalAlignment="center"></dxo-legend>
-      </dx-chart>
+          <dxo-legend verticalAlignment="top" horizontalAlignment="center"></dxo-legend>
+        </dx-chart>
 
-      <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
-        [dataSource]="StandingACKTableData"
-        [showBorders]="true"
-        [cellHintEnabled]="true"
-        [rowAlternationEnabled]="true"
-        [export]="{ enabled: true }"
-      >
-        <dxo-paging [pageSize]="5"></dxo-paging>
-        <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[5, 10, 'all']" [showInfo]="true" [showNavigationButtons]="true" [displayMode]="'full'"></dxo-pager>
-        <dxo-search-panel [visible]="true" [width]="240" placeholder="Search..."></dxo-search-panel>
-      </dx-data-grid>
+        <dx-data-grid [remoteOperations]="true" [columnWidth]="200"
+          [dataSource]="StandingACKTableData"
+          [showBorders]="true"
+          [cellHintEnabled]="true"
+          [rowAlternationEnabled]="true"
+          [export]="{ enabled: true }"
+        >
+          <dxo-paging [pageSize]="5"></dxo-paging>
+          <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[5, 10, 'all']" [showInfo]="true" [showNavigationButtons]="true" [displayMode]="'full'"></dxo-pager>
+          <dxo-search-panel [visible]="true" [width]="240" placeholder="Search..."></dxo-search-panel>
+        </dx-data-grid>
+      </ng-container>
+
+      <ng-container *ngIf="card.showId === '52'|| card.showId === '53'|| card.showId === '54' || card.showId === '55' || card.showId === '56'
+        || card.showId === '72' || card.showId === '50' || card.showId === '51' || card.showId === '60' || card.showId === '26' || card.showId === '30' || card.showId === '29'
+        || card.showId === '27' || card.showId === '28' || card.showId === '1' || card.showId === '12' || card.showId === '9' || card.showId === '8' || card.showId === '5'
+        || card.showId === '2' || card.showId === '11' || card.showId === '10' || card.showId === '6' || card.showId === '4'  || card.showId === '33' || card.showId === '31'
+        || card.showId === '21' || card.showId === '18' || card.showId === '25' || card.showId === '24' || card.showId === '13' || card.showId === '14' || card.showId === '16'
+        || card.showId === '17' || card.showId === '22' || card.showId === '15' || card.showId === '19' || card.showId === '20' || card.showId === '23' || card.showId === '32'
+        || card.showId === '57' || card.showId === '58' || card.showId === '48' || card.showId === '49' || card.showId === '67' || card.showId === '77' || card.showId === '34'
+        || card.showId === '35' || card.showId === '38' || card.showId === '39' || card.showId === '37' || card.showId === '36' || card.showId === '45' || card.showId === '43'
+        || card.showId === '44' || card.showId === '42' || card.showId === '41' || card.showId === '40'">
+        <div *ngIf="card.showChart && card.showId != '77' && card.showId != '45'">
+          <dx-chart
+            [dataSource]="card.chartData"
+            [series]="card.chartSeries"
+            [valueAxis]="card.chartAxes"
+            [argumentAxis]="card.argumentAxis"
+            [tooltip]="card.tooltip"
+            [legend]="{ verticalAlignment: 'top', horizontalAlignment: 'center' }">
+          </dx-chart>
+        </div>
+
+        <div *ngIf="card.showGrid">
+          <dx-data-grid
+            [dataSource]="card.tableData"
+            [showBorders]="true"
+            [columnAutoWidth]="true"
+            [rowAlternationEnabled]="true" [paging]="{ pageSize: 5 }"
+            [pager]="{
+              showPageSizeSelector: true,
+              visible: true,
+              allowedPageSizes: [5, 10, 20, 'all'],
+              showInfo: true
+            }"
+            [searchPanel]="{ visible: true, width: 240, placeholder: 'Search...' }">
+          </dx-data-grid>
+        </div>
+      </ng-container>
+
+      <div *ngIf="!card.showChart &&  !card.showGrid" class="empty-placeholder">
+        Click ⋮ to configure.
+      </div>
     </div>
   </div>
 </div>
+
+<dx-popup
+  [(visible)]="isSavePopupVisible"
+  [width]="800"
+  [height]="'auto'"
+  [showTitle]="true"
+  title="Save Settings"
+  [dragEnabled]="true"
+  [hideOnOutsideClick]="true">
+
+  <div *dxTemplate="let data of 'content'">
+    <div class="popup-form">
+
+      <div class="">
+        <label>Page Name</label>
+        <dx-text-box
+          [(value)]="popupData.dashboardName"
+          placeholder="Enter Page Name">
+        </dx-text-box>
+      </div>
+
+      <div class="popup-row">
+        <div class="">
+          <label>Access Type</label>
+          <dx-select-box
+            [items]="accessType"
+            displayExpr="name"
+            valueExpr="value"
+            [(value)]="popupData.accessType">
+          </dx-select-box>
+        </div>
+
+        <div class="">
+          <label>Refresh Rate (Seconds)</label>
+          <dx-number-box
+            [(value)]="popupData.refreshRate"
+            [min]="5"
+            [showSpinButtons]="true">
+          </dx-number-box>
+        </div>
+      </div>
+
+      <div class="popup-row">
+        <div class="">
+          <label>Map Type</label>
+          <dx-select-box
+            [items]="mapTypes"
+            [(value)]="popupData.mapType"
+            (onValueChanged)="onMapTypeChanged($event)">
+          </dx-select-box>
+        </div>
+
+        <!-- Enterprise -->
+        <div class="" *ngIf="popupData.mapType">
+          <label>Enterprise</label>
+          <dx-select-box
+            [items]="enterprises"
+            displayExpr="EnterPriseName"
+            valueExpr="EnterpriseID"
+            [(value)]="popupData.enterpriseId"
+            (onValueChanged)="onEnterpriseChanged($event)">
+          </dx-select-box>
+        </div>
+      </div>
+
+      <div class="popup-row">
+        <!-- Site -->
+        <div class="" *ngIf="['Site','Plant','Area','Unit'].includes(popupData.mapType)">
+          <label>Site</label>
+          <dx-select-box
+            [items]="sites"
+            displayExpr="SiteName"
+            valueExpr="SiteId"
+            [(value)]="popupData.siteId"
+            (onValueChanged)="onSiteChanged($event)">
+          </dx-select-box>
+        </div>
+
+        <!-- Plant -->
+        <div class="" *ngIf="['Plant','Area','Unit'].includes(popupData.mapType)">
+          <label>Plant</label>
+          <dx-select-box
+            [items]="plants"
+            displayExpr="PlantName"
+            valueExpr="PlantId"
+            [(value)]="popupData.plantId"
+            (onValueChanged)="onPlantChanged($event)">
+          </dx-select-box>
+        </div>
+      </div>
+
+      <div class="popup-row">
+        <!-- Area -->
+        <div class="" *ngIf="['Area','Unit'].includes(popupData.mapType)">
+          <label>Area</label>
+          <dx-select-box
+            [items]="areas"
+            displayExpr="AreaName"
+            valueExpr="AreaId"
+            [(value)]="popupData.areaId"
+            (onValueChanged)="onAreaChanged($event)">
+          </dx-select-box>
+        </div>
+
+        <!-- Unit -->
+        <div class="" *ngIf="popupData.mapType === 'Unit'">
+          <label>Unit</label>
+          <dx-select-box
+            [items]="units"
+            displayExpr="UnitName"
+            valueExpr="UnitId"
+            [(value)]="popupData.unitId">
+          </dx-select-box>
+        </div>
+      </div>
+
+      <div class="popup-actions">
+        <dx-button
+          text="Confirm"
+          type="success"
+          (onClick)="confirmSave()">
+        </dx-button>
+
+        <dx-button
+          text="Cancel"
+          (onClick)="isSavePopupVisible = false">
+        </dx-button>
+      </div>
+    </div>
+  </div>
+</dx-popup>

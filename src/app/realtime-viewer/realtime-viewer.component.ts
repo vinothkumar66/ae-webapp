@@ -59,7 +59,7 @@ export class RealtimeViewerComponent implements OnInit, OnDestroy {
 
   popupData: any = {
     accessType: 'N',
-    refreshRate: 0,
+    refreshRate: 10,
     dashboardName: '',
     mapType: 'Enterprise',
     enterpriseId: null,
@@ -183,8 +183,13 @@ export class RealtimeViewerComponent implements OnInit, OnDestroy {
           this.cardCounter = Math.max(...this.cards.map(c => c.id)) + 1;
 
           this.cards.forEach(card => {
-            this.fetchCardData(card);
-            const intervalId = setInterval(() => this.fetchCardData(card), 30000);
+            var intervalId;
+            if(this.pageValues?.RefreshRate >= 0) {
+              this.fetchCardData(card);
+              intervalId = setInterval(() => this.fetchCardData(card), this.pageValues?.RefreshRate * 1000);
+            } else {
+              this.fetchCardData(card);
+            }
             this.pollingIntervals.push(intervalId);
           });
         }

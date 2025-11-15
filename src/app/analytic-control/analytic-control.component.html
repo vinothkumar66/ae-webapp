@@ -74,7 +74,7 @@
 
   <div class="form-row" [ngClass]="{ 'hidden': formData.queryType !== 'LastNN' }">
     <label>Relative Time / Auto Update</label>
-    <dx-tag-box
+    <dx-tag-box 
       [items]="['Relative Time', 'Auto Update']"
       [(value)]="formData.relativeTime"
       [showSelectionControls]="true"
@@ -82,12 +82,12 @@
     </dx-tag-box>
   </div>
 
-  <div class="form-row"  [ngClass]="{ 'hidden': formData.queryType !== 'LastNN' || !formData.relativeTime.includes('Auto Update') }">
+  <div class="form-row"  [ngClass]="{ 'hidden': formData.queryType !== 'LastNN' || !formData.relativeTime.includes('Relative Time') }">
       <label>Auto Update (Update Rate in Mins)</label>
       <dx-number-box [(value)]="formData.autoUpdate"></dx-number-box>
     </div>
     
-    <div class="form-row"  [ngClass]="{ 'hidden': formData.queryType !== 'LastNN' || !formData.relativeTime.includes('Relative Time') }">
+    <div class="form-row"  [ngClass]="{ 'hidden': formData.queryType !== 'LastNN' || !formData.relativeTime.includes('Auto Update') }">
       <label>Time Picker</label>
       <dx-date-box
         type="time"
@@ -130,32 +130,32 @@
    </div>
 
   <div class="form-row">
-      <span>Available Fields</span>
-        <dx-list [dataSource]="this.formData.displayFields" keyExpr="id" height="400">
-          <dxo-item-dragging
-            group="tasks"
-            [data]="displayFields"
-            [allowReordering]="true"
-            [onDragStart]="onDragStart"
-            [onAdd]="onAdd"
-            [onRemove]="onRemove"
-            [onReorder]="onReorder">
-          </dxo-item-dragging>
-        </dx-list>
+    <span>Available Fields</span>
+    <dx-list [dataSource]="this.formData.displayFields" keyExpr="id" height="400">
+        <dxo-item-dragging
+        group="tasks"
+        [data]="displayFields"
+        [allowReordering]="true"
+        [onDragStart]="onDragStart"
+        [onAdd]="onAdd"
+        [onRemove]="onRemove"
+        [onReorder]="onReorder">
+        </dxo-item-dragging>
+    </dx-list>
   </div>
 
   <div class="form-row">
-      <span>Selected Fields</span>
-        <dx-list [dataSource]="this.formData.defaultFields" keyExpr="id" height="400">
-          <dxo-item-dragging
-            group="tasks"
-            [data]="defaultFields"
-            [allowReordering]="true"
-            [onDragStart]="onDragStart"
-            [onAdd]="onAdd"
-            [onRemove]="onRemove"
-            [onReorder]="onReorder">
-          </dxo-item-dragging>
-        </dx-list>
+    <span>Selected Fields</span>
+    <dx-list [dataSource]="this.formData.defaultFields" keyExpr="id" height="400">
+        <dxo-item-dragging
+        group="tasks"
+        [data]="defaultFields"
+        [allowReordering]="true"
+        [onDragStart]="onDragStart"
+        [onAdd]="onAdd"
+        [onRemove]="onRemove"
+        [onReorder]="onReorder">
+        </dxo-item-dragging>
+    </dx-list>
   </div>
 </div>

@@ -273,7 +273,7 @@ export class Dashboard implements OnInit {
     }
 
     if (refreshRate && refreshRate > 0) {
-      const intervalMs = refreshRate * 60 * 1000;
+      const intervalMs = refreshRate * 1000;
 
       const timer = setInterval(() => {
         this.refreshChartData(col);
@@ -2369,5 +2369,24 @@ export class Dashboard implements OnInit {
         }
       }
     );
+  }
+
+  isFilterPopupVisible = false;
+  filterModel = { fromDate: new Date(), toDate: new Date() };
+
+  openFilterPopup() {
+    this.isFilterPopupVisible = true;
+  }
+
+  applyDateFilter() {
+    const fromDate = this.filterModel.fromDate;
+    const toDate = this.filterModel.toDate;
+
+    console.log('From Date:', fromDate);
+    console.log('To Date:', toDate);
+
+    console.log(this.pageValues);
+
+    this.isFilterPopupVisible = false;
   }
 }

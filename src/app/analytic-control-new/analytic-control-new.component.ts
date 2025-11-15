@@ -356,7 +356,7 @@ export class AnalyticControlNewComponent {
         let dataFromApiObj = JSON.parse(dataFromApi);
         const windowCardId = this.formData.windowCardId;
 
-         if (Array.isArray(dataFromApiObj)) {
+        if (Array.isArray(dataFromApiObj)) {
           dataFromApiObj = { data: dataFromApiObj, WindowDetails: this.formData };
         } else {
           dataFromApiObj.WindowDetails = this.formData;

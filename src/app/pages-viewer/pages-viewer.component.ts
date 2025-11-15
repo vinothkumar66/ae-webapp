@@ -155,13 +155,8 @@ export class PagesViewerComponent {
       const url = `realtime/${page.pageid}`;
       mode === 'blank' ? window.open(url, '_blank') : this.router.navigate([url]);
     } else {
-      const url = `analytic-new/${page.pageid}`;
+      const url = `analytic/${page.pageid}`;
       mode === 'blank' ? window.open(url, '_blank') : this.router.navigate([url]);
     }    
-  }
-
-  navigateToDashboard(dashboard: any, mode: string) {
-    const url = `dashboard/${dashboard.pageid}`;
-    mode === 'blank' ? window.open(url, '_blank') : this.router.navigate([url]);
   }
 }

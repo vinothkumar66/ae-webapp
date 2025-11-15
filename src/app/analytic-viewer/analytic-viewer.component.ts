@@ -1,106 +1,251 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { DevExtremeModule } from 'devextreme-angular';
+import { ApiService } from '../services/api.service';
+import { forkJoin, map } from 'rxjs';
 
 @Component({
   selector: 'app-analytic-viewer',
   standalone: true,
   imports: [
-    DevExtremeModule,
     CommonModule,
+    DevExtremeModule
   ],
   templateUrl: './analytic-viewer.component.html',
   styleUrls: ['./analytic-viewer.component.css']
 })
 export class AnalyticViewerComponent implements OnInit {
-  AnalysisData: any;
-  tableData: any[] = [];
-  tableColumns: any[] = [];
-  chartData: any[] = [];
-  chartSeries: any[] = [];
-  chartAxis: any[] = [];
-  dataFromStorage: any;
-  cardTitle: string = '';
-  analyticType: string = '';
-  showId: any;
-  chartType: any;
-  showChartOnly = false;
-  showTableOnly = false;
-  eeumaData: any[] = [];
-  iecData: any[] = [];
-  constructor(private router: Router) {}
+  cards: any[] = [];
+  isUpdateMode = false;
+  savedPageId: string | null = null;
+
+  constructor(
+    private router: Router,
+    private apiService: ApiService,
+    private activatedRoute: ActivatedRoute,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit() {
-    this.checkControlData();
+    this.activatedRoute.paramMap.subscribe(params => {
+      const pageId: any = params.get('id');
+      localStorage.setItem('pageId', pageId);
+      if (pageId) {
+        this.savedPageId = pageId;
+        this.loadPageProperties(pageId);
+        this.isUpdateMode = true;
+      } else {
+        this.loadLocalCards();
+        this.isUpdateMode = false;
+      }
+      this.cdr.detectChanges();
+    });
   }
 
-  checkControlData() {
-    const savedControlData = localStorage.getItem('Analysis');
-    if (savedControlData) {
-      this.dataFromStorage = JSON.parse(savedControlData);
-      this.cardTitle = this.dataFromStorage.WindowDetails.analyticTitle || '';
-      this.analyticType = this.dataFromStorage.WindowDetails.analyticType || '';
-      
-      this.showId = this.dataFromStorage?.WindowDetails?.analyticId;
-      this.chartType = this.dataFromStorage?.WindowDetails?.chartType;
-      const showControl = this.dataFromStorage?.WindowDetails?.showControl || [];
-      this.showChartOnly = showControl.includes('Chart');
-      this.showTableOnly = showControl.includes('Datatable');
+  pageValues: any;
+  loadPageProperties(pageId: string) {
+    this.apiService.getPageProperties(pageId).subscribe({
+      next: (res: any) => {
+        const parsed = typeof res === 'string' ? JSON.parse(res) : res;
+        this.pageValues = parsed;
+        
+        const pageProperties = JSON.parse(parsed.pageproperties);
 
-      this.AnalysisData = this.dataFromStorage.AnalysisData;
-
-      this.tableData = this.AnalysisData.Table || [];
-      if (this.tableData.length > 0) {
-        this.tableColumns = Object.keys(this.tableData[0]);
+        if (!localStorage.getItem("AT_Properties")) {
+          if (Array.isArray(pageProperties)) {
+            localStorage.setItem("AT_Properties", JSON.stringify(pageProperties));
+          } else {
+            localStorage.setItem("AT_Properties", pageProperties);
+          }
+        }
+        
+        this.loadLocalCards();
+        setInterval(this.loadLocalCards.bind(this), parsed?.RefreshRate*1000);
+      },
+      error: (err) => {
+        console.error('Error fetching page properties:', err);
       }
+    });
+  }
 
-      if (this.AnalysisData.charts && this.AnalysisData.charts.length > 0) {
-        const chartConfig = this.AnalysisData.charts[0];
-        this.chartData = chartConfig.data || [];
-        this.chartSeries = chartConfig.series || [];
-        this.chartAxis = chartConfig.axis || [];
+  loadLocalCards() {
+    const storedData = localStorage.getItem('AT_Properties');
+    if (!storedData) return;
 
-        if (this.chartSeries && this.chartSeries.length > 0 && this.chartType) {
-          this.chartSeries[0].type = this.chartType;
+    const parsed = JSON.parse(storedData);
+    const windowGroups = parsed.WindowGroups || [];
+
+    const requests = windowGroups.map((group: any) => {
+      const data = group.WindowDetails.apiPayload || {};
+      var WindowData = group.WindowDetails.WindowDetails;
+
+      return this.apiService.GetAnalyticData(data).pipe(
+        map((dataFromApi: any) => {
+          const details = JSON.parse(dataFromApi);
+
+          const tableData = details.Table || [];
+
+          // Chart object
+          const chartObj = details.charts?.[0] || {};
+          const chartData = chartObj.data || [];
+          const chartSeries = chartObj.series || [];
+          const chartAxes = chartObj.axis || [];
+          const chartType = WindowData.chartType || 'bar';
+
+          const showId = WindowData.analyticId;
+          const controls = WindowData.showControl || [];
+
+          const argumentAxis = {
+            label: {
+              overlappingBehavior: "rotate",
+              rotationAngle: -45
+            }
+          };
+
+          // Tooltip definition
+          const tooltip = {
+            enabled: true,
+            customizeTooltip: function (arg: any) {
+              return {
+                text: `${arg.argumentText} : ${arg.value}`
+              };
+            }
+          };
+
+          // Date calculations
+          const times = (chartData || [])
+            .map((item: any) => new Date(item.fromtime))
+            .sort((a: any, b: any) => a.getTime() - b.getTime());
+
+          const fromDate = times.length > 0 ? times[0] : null;
+          const toDate = times.length > 0 ? times[times.length - 1] : null;
+
+          function formatDate(date: Date | null): string | null {
+            if (!date) return null;
+            const yyyy = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const dd = String(date.getDate()).padStart(2, '0');
+            const hh = String(date.getHours()).padStart(2, '0');
+            const mi = String(date.getMinutes()).padStart(2, '0');
+            const ss = String(date.getSeconds()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+          }
+
+          // Special cases (your original logic)
+          if (showId == '62') this.eeumaGridData(details);
+          if (showId == '63') this.iecGridData(details);
+          if (showId == '73') this.AlarmPerformanceChart(details);
+          if (showId == '74') this.AlarmPerformanceIndicator(details.data);
+          if (showId == '75') this.KPIChart(details);
+          if (showId == '64') this.AlarmPerformanceDashboard(details);
+          if (showId == '61') this.AlarmsVsOperatorAction(details);
+          if (showId === '46' && showId === '47') this.StandingACK(details);
+
+          console.log(data, details)
+
+          return {
+            id: +group.windowCardId,
+            title: WindowData.analyticTitle || 'Untitled',
+            showChart: controls.includes('Chart'),
+            showGrid: controls.includes('Datatable'),
+            tableData,
+            chartData,
+            chartSeries,
+            chartAxes,
+            tooltip,
+            showId,
+            chartType,
+            argumentAxis,
+            fromDate: formatDate(fromDate),
+            toDate: formatDate(toDate)
+          };
+        })
+      );
+    });
+
+    // Finally wait for ALL API calls to finish
+    forkJoin<any[]>(requests).subscribe({
+      next: (cards) => {
+        this.cards = cards;
+        console.log('Final loaded cards:', this.cards);
+      },
+      error: (err) => {
+        console.error('Error loading local cards:', err);
+      }
+    });
+  }
+
+  addCard() {
+    const newCard = {
+      id: Date.now(),
+      title: '',
+      showChart: false,
+      showGrid: false,
+      tableData: [],
+      chartData: [],
+      chartSeries: [],
+      chartAxes: [],
+      tooltip: {
+        enabled: true,
+        customizeTooltip: function (arg: any) {
+          console.log(arg)
+          return {
+            text: `${arg.argumentText}: ${arg.value}`
+          };
+        }
+      },
+      argumentAxis: {
+        label: {
+          overlappingBehavior: "rotate",
+          rotationAngle: -45
         }
       }
+    };
+    this.cards.push(newCard);
+  }
 
-      if (this.showId === "62") {
-        this.eeumaGridData(this.AnalysisData);
-      } else if(this.showId === "63") {
-        this.iecGridData(this.AnalysisData);
-      } else if(this.showId === "73") {
-        this.AlarmPerformanceChart(this.AnalysisData);
-      } else if(this.showId === "74") {
-        this.AlarmPerformanceIndicator(this.AnalysisData);
-      } else if(this.showId === "75") {
-        this.KPIChart(this.AnalysisData);
-      } else if(this.showId == "64") {
-        this.AlarmPerformanceDashboard(this.AnalysisData);
-      } else if(this.showId == "52" || this.showId === "54" || this.showId === "53") {
-        this.AlarmsPerOperatingPosition(this.AnalysisData);
-      } else if(this.showId === "61") {
-        this.AlarmsVsOperatorAction(this.AnalysisData);
-      } else if(this.showId === "72" || this.showId === "50") {
-        this.ChatteringAlarms(this.AnalysisData);
-      } else if(this.showId === "51") {
-        this.FleedingAlarms(this.AnalysisData);
-      } else if(this.showId === "60" || this.showId === "48" || this.showId === "49" || this.showId === "67") {
-        this.FloodAlarms(this.AnalysisData);
-      } else if(this.showId === "26" || this.showId === "30" || this.showId === "29" || this.showId === "27" || this.showId === "28" || this.showId === "1" || this.showId === "12" || this.showId === "9" || this.showId === "8" || this.showId === "5" || this.showId === "2" || this.showId === "11"
-        || this.showId === "10" || this.showId === "6" || this.showId === "4" || this.showId === "7" || this.showId === "3" || this.showId === "33" || this.showId === "31" || this.showId === "76" || this.showId === "21" || this.showId === "18" || this.showId === "25" || this.showId === "24" || this.showId === "13"
-        || this.showId === "14" || this.showId === "16" || this.showId === "17" || this.showId === "22" || this.showId === "15" || this.showId === "19" || this.showId === "20" || this.showId === "23" || this.showId === "32" || this.showId === "57" || this.showId === "58"
-      ) {
-        this.FrequencyAlarms(this.AnalysisData);
-      } else if (this.showId === "77" || this.showId === "47" || this.showId === "45") {
-        this.SOE(this.AnalysisData)
-      } else if(this.showId === "46" || this.showId === "34" || this.showId === "35" || this.showId === "38" || this.showId === "39" || this.showId === "37" || this.showId === "36"
-        || this.showId === "43" || this.showId === "44" || this.showId === "42" || this.showId === "41" || this.showId === "40"
-      ) {
-        this.StandingACK(this.AnalysisData);
-      }
-    }
+  configureCard(id: number) {
+    this.router.navigate([`analytic-control/${id}`]);
+  }
+
+  removeCard(id: number) {
+    this.cards = this.cards.filter(card => card.id !== id);
+  }
+
+  eeumaData: any[] = [];
+  eeumacalcu: any[] = [
+    { "Performance Category": 'Overloaded', "Average Alarm rate per 10 M": '>100', "Peak Alarm PER 10 Min": '>1000', "% Time > 5 Alarms": '>50%' },
+    { "Performance Category": 'Reactive', "Average Alarm rate per 10 M": '10 - 100', "Peak Alarm PER 10 Min": '1000', "% Time > 5 Alarms": '25 -50%' },
+    { "Performance Category": 'Stable', "Average Alarm rate per 10 M": '1 - 10', "Peak Alarm PER 10 Min": '100 - 1000', "% Time > 5 Alarms": '5 - 25%' },
+    { "Performance Category": 'Robust', "Average Alarm rate per 10 M": '1 -10', "Peak Alarm PER 10 Min": '10 - 100', "% Time > 5 Alarms": '1 - 5%' },
+    { "Performance Category": 'Predictive', "Average Alarm rate per 10 M": '< 1', "Peak Alarm PER 10 Min": '< 10', "% Time > 5 Alarms": '< 1%' },
+  ];
+
+  onToolbarPreparing(e: any) {
+    const toolbar = e.toolbarOptions.items;
+
+    toolbar.unshift({
+      location: 'before',
+      widget: 'dxButton',
+      options: {
+        stylingMode: 'contained',
+        text: "Duration : " + this.cards[0].fromDate + " - " + this.cards[0].toDate 
+      },
+    });
+  }
+
+  onToolbarEeumacalcu(e: any) {
+    const toolbar = e.toolbarOptions.items;
+
+    toolbar.unshift({
+      location: 'before',
+      widget: 'dxButton',
+      options: {
+        stylingMode: 'contained',
+        text: 'Table 2. EEMUA 191 - Performance category calculation'
+      },
+    });
   }
 
   eeumaGridData(data: any) {
@@ -220,43 +365,44 @@ export class AnalyticViewerComponent implements OnInit {
   
     this.eeumaData = eeumaData;
   }
+
+  onCellPrepared(e: any) {
+    if(e.rowType === 'data'){
+      if (e.column.dataField === 'Target1' && e.data.bgColor) {
+        if (
+          e.data.Metric === ""
+        ) {
+          e.cellElement.style.backgroundColor =  "yellow";
+        }
+
+        if (
+          e.data.Metric.includes("Annunciated priority distribution")
+        ) {
+          e.cellElement.style.backgroundColor = "red";
+        }
   
-  onToolbarPreparing(e: any) {
-    const toolbar = e.toolbarOptions.items;
+        if (
+          e.data.Metric === "."
+        ) {
+          e.cellElement.style.backgroundColor =  "mediumseagreen";
+        }
+      }
+  
+      if(e.column.dataField === 'Col1' && e.data.bgColor){
+        if (
+          e.data.Metric.includes("Annunciated priority distribution") || e.data.Metric === "" || e.data.Metric === "."
+        ) {
+          console.log(e.data.bgColor)
 
-    toolbar.unshift({
-      location: 'before',
-      widget: 'dxButton',
-      options: {
-        stylingMode: 'contained',
-        text: "Duration : " + this.AnalysisData.duration.from + " - " + this.AnalysisData.duration.to
-      },
-    });
+          e.cellElement.style.backgroundColor = e.data.bgColor;
+        }
+      }
+    }
   }
 
-  onToolbarEeumacalcu(e: any) {
-    const toolbar = e.toolbarOptions.items;
-
-    toolbar.unshift({
-      location: 'before',
-      widget: 'dxButton',
-      options: {
-        stylingMode: 'contained',
-        text: 'Table 2. EEMUA 191 - Performance category calculation'
-      },
-    });
-  }
-
-  eeumacalcu: any[] = [
-    { "Performance Category": 'Overloaded', "Average Alarm rate per 10 M": '>100', "Peak Alarm PER 10 Min": '>1000', "% Time > 5 Alarms": '>50%' },
-    { "Performance Category": 'Reactive', "Average Alarm rate per 10 M": '10 - 100', "Peak Alarm PER 10 Min": '1000', "% Time > 5 Alarms": '25 -50%' },
-    { "Performance Category": 'Stable', "Average Alarm rate per 10 M": '1 - 10', "Peak Alarm PER 10 Min": '100 - 1000', "% Time > 5 Alarms": '5 - 25%' },
-    { "Performance Category": 'Robust', "Average Alarm rate per 10 M": '1 -10', "Peak Alarm PER 10 Min": '10 - 100', "% Time > 5 Alarms": '1 - 5%' },
-    { "Performance Category": 'Predictive', "Average Alarm rate per 10 M": '< 1', "Peak Alarm PER 10 Min": '< 10', "% Time > 5 Alarms": '< 1%' },
-  ];
-
-  //IEC Data
+  iecData: any[] = [];
   iecGridData(data: any) {
+    console.log(data)
     const iecData = [];
   
     iecData.push({
@@ -378,40 +524,6 @@ export class AnalyticViewerComponent implements OnInit {
     this.iecData = [...transformedIecData,];
   }
 
-  onCellPrepared(e: any) {
-    if(e.rowType === 'data'){
-      if (e.column.dataField === 'Target1' && e.data.bgColor) {
-        if (
-          e.data.Metric === ""
-        ) {
-          e.cellElement.style.backgroundColor =  "yellow";
-        }
-
-        if (
-          e.data.Metric.includes("Annunciated priority distribution")
-        ) {
-          e.cellElement.style.backgroundColor = "red";
-        }
-  
-        if (
-          e.data.Metric === "."
-        ) {
-          e.cellElement.style.backgroundColor =  "mediumseagreen";
-        }
-      }
-  
-      if(e.column.dataField === 'Col1' && e.data.bgColor){
-        if (
-          e.data.Metric.includes("Annunciated priority distribution") || e.data.Metric === "" || e.data.Metric === "."
-        ) {
-          console.log(e.data.bgColor)
-
-          e.cellElement.style.backgroundColor = e.data.bgColor;
-        }
-      }
-    }
-  }
-
   AlmChartData: any = [];
   valueAxisConfig: any;
   seriesData: any;
@@ -476,68 +588,6 @@ export class AnalyticViewerComponent implements OnInit {
   AlmDashboardData: any = [];
   AlarmPerformanceDashboard(data: any) {
     this.AlmDashboardData = data.Table;
-  }
-
-  AlmsPerOprPositionData: any = [];
-  AlmsPerOprPositionTableData: any = [];
-  AlarmsPerOperatingPosition(data: any) {
-    this.AlmsPerOprPositionData = data.charts[0].data;
-    this.seriesData = data.charts[0].series;
-    this.AlmsPerOprPositionTableData = data.Table;
-
-    if (data.charts[0].axis && data.charts[0].axis.length > 0) {
-      this.valueAxisConfig = data.charts[0].axis[0];
-    } else {
-      this.valueAxisConfig = null;
-    }
-  }
-
-  AlarmVsOperatorData: any = [];
-  AlarmVsOperatorTableData: any = [];
-
-  AlarmsVsOperatorAction(data: any) {
-    this.AlarmVsOperatorData = data.charts;
-    this.AlarmVsOperatorTableData = data.Table;
-  }
-
-  ChatteringData: any = [];
-  ChatteringTableData: any = [];
-  ChatteringAlarms(data: any) {
-    this.ChatteringData = data.charts;
-    this.ChatteringTableData = data.Table;
-  }
-
-  FleedingData: any = [];
-  FleedingTableData: any = [];
-  FleedingAlarms(data: any) {
-    this.FleedingData = data.charts;
-    this.FleedingTableData = data.Table;
-  }
-
-  FloodData: any = [];
-  FloodTableData: any = [];
-  FloodAlarms(data: any) {
-    this.FloodData = data.charts;
-    this.FloodTableData = data.Table;
-  }
-
-  FrequencyData: any = [];
-  FrequencyTableData: any = [];
-  FrequencyAlarms(data: any) {
-    this.FrequencyData = data.charts;
-    this.FrequencyTableData = data.Table;
-  }
-
-  SOETableData: any = [];
-  SOE(data: any) {
-    this.SOETableData = data.Table;
-  }
-
-  StandingACKData: any = [];
-  StandingACKTableData: any = [];
-  StandingACK(data: any) {
-    this.StandingACKData = data.charts;
-    this.StandingACKTableData = data.Table;
   }
 
   dataPoints: any = {};
@@ -1145,491 +1195,491 @@ export class AnalyticViewerComponent implements OnInit {
 
   AlarmPerformanceIndicator(data: any) {
     if (data[0]) {
-            this.dataPoints = data[0];
-          }
-          if (data[1]) {
-            this.statePoints = data[1];
-          }
-          // const avgValues = this.dataPoints.map((dataPoint: { avg: any; }) => dataPoint.avg);
-          // Assuming alarm_metrics1 is already defined
-          this.dataPoints.forEach(
-            (dataPoint: {
-              avg: any;
-              percent_outside_target_avg_value: any;
-              area: any;
-              color: any;
-              convert_to_intervaltime: any;
-            }) => {
-              if (dataPoint) {
-                this.alarm_metrics1.push({
-                  // valueField: 'percent_outside_target_avg_value',
-                  // name: 'Scatter Series',
-                  // argumentField: 'avg',
-                  // type: 'scatter',
-                  // color: '#9cd8f2',
-                  // size: 45,
-                  // data: [
-                  //   {
-                  //     avg: dataPoint.avg || 0,
-                  //     percent_outside_target_avg_value: dataPoint.percent_outside_target_avg_value || 0
-                  //   }
-                  // ]
-                  area: dataPoint.area,
-                  areacolor: dataPoint.color,
-                  datetime: dataPoint.convert_to_intervaltime,
-                  // avg: this.mapValueSteadyStateArgAxis(dataPoint.avg) || 0,
-                  // percent_outside_target_avg_value:
-                  //   this.mapValueSteadyStateValAxis(
-                  //     dataPoint.percent_outside_target_avg_value
-                  //   ) || 0,
-                  avg: dataPoint.avg > 80 ? 80 : dataPoint.avg,
-                  percent_outside_target_avg_value:
-                    dataPoint.percent_outside_target_avg_value > 80
-                      ? 80
-                      : dataPoint.percent_outside_target_avg_value,
-                });
-                let avg = dataPoint.avg > 80 ? 80 : dataPoint.avg;
-                let per_avg_val =
-                  dataPoint.percent_outside_target_avg_value > 80
-                    ? 80
-                    : dataPoint.percent_outside_target_avg_value;
+      this.dataPoints = data[0];
+    }
+    if (data[1]) {
+      this.statePoints = data[1];
+    }
+    // const avgValues = this.dataPoints.map((dataPoint: { avg: any; }) => dataPoint.avg);
+    // Assuming alarm_metrics1 is already defined
+    this.dataPoints.forEach(
+      (dataPoint: {
+        avg: any;
+        percent_outside_target_avg_value: any;
+        area: any;
+        color: any;
+        convert_to_intervaltime: any;
+      }) => {
+        if (dataPoint) {
+          this.alarm_metrics1.push({
+            // valueField: 'percent_outside_target_avg_value',
+            // name: 'Scatter Series',
+            // argumentField: 'avg',
+            // type: 'scatter',
+            // color: '#9cd8f2',
+            // size: 45,
+            // data: [
+            //   {
+            //     avg: dataPoint.avg || 0,
+            //     percent_outside_target_avg_value: dataPoint.percent_outside_target_avg_value || 0
+            //   }
+            // ]
+            area: dataPoint.area,
+            areacolor: dataPoint.color,
+            datetime: dataPoint.convert_to_intervaltime,
+            // avg: this.mapValueSteadyStateArgAxis(dataPoint.avg) || 0,
+            // percent_outside_target_avg_value:
+            //   this.mapValueSteadyStateValAxis(
+            //     dataPoint.percent_outside_target_avg_value
+            //   ) || 0,
+            avg: dataPoint.avg > 80 ? 80 : dataPoint.avg,
+            percent_outside_target_avg_value:
+              dataPoint.percent_outside_target_avg_value > 80
+                ? 80
+                : dataPoint.percent_outside_target_avg_value,
+          });
+          let avg = dataPoint.avg > 80 ? 80 : dataPoint.avg;
+          let per_avg_val =
+            dataPoint.percent_outside_target_avg_value > 80
+              ? 80
+              : dataPoint.percent_outside_target_avg_value;
 
-                function isInsideTriangle(
-                  x1: number,
-                  y1: number,
-                  x2: number,
-                  y2: number,
-                  x3: number,
-                  y3: number,
-                  x: number,
-                  y: number
-                ): boolean {
-                  function area(
-                    x1: number,
-                    y1: number,
-                    x2: number,
-                    y2: number,
-                    x3: number,
-                    y3: number
-                  ): number {
-                    return Math.abs(
-                      (x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2.0
-                    );
-                  }
-
-                  /* Calculate the area of triangle ABC */
-                  const A: number = area(x1, y1, x2, y2, x3, y3);
-
-                  /* Calculate the area of triangle PBC */
-                  const A1: number = area(x, y, x2, y2, x3, y3);
-
-                  /* Calculate the area of triangle PAC */
-                  const A2: number = area(x1, y1, x, y, x3, y3);
-
-                  /* Calculate the area of triangle PAB */
-                  const A3: number = area(x1, y1, x2, y2, x, y);
-
-                  /* Check if the sum of A1, A2, and A3 is the same as A */
-                  return A === A1 + A2 + A3;
-                }
-                let stateValue =
-                  per_avg_val >= 0 && per_avg_val <= 20 && avg >= 0 && avg <= 20
-                    ? 1
-                    : per_avg_val >= 20 &&
-                      per_avg_val <= 40 &&
-                      avg >= 0 &&
-                      avg <= 20
-                    ? 2
-                    : per_avg_val >= 60 &&
-                      per_avg_val <= 80 &&
-                      avg >= 0 &&
-                      avg <= 20
-                    ? 4
-                    : per_avg_val >= 0 &&
-                      per_avg_val <= 20 &&
-                      avg >= 20 &&
-                      avg <= 40
-                    ? 5
-                    : per_avg_val >= 20 &&
-                      per_avg_val <= 40 &&
-                      avg >= 20 &&
-                      avg <= 40
-                    ? 6
-                    : per_avg_val >= 40 &&
-                      per_avg_val <= 60 &&
-                      avg >= 20 &&
-                      avg <= 40
-                    ? 7
-                    : per_avg_val >= 0 &&
-                      per_avg_val <= 20 &&
-                      avg >= 40 &&
-                      avg <= 60
-                    ? 9
-                    : per_avg_val >= 20 &&
-                      per_avg_val <= 40 &&
-                      avg >= 40 &&
-                      avg <= 60
-                    ? 10
-                    : per_avg_val >= 40 &&
-                      per_avg_val <= 60 &&
-                      avg >= 40 &&
-                      avg <= 60
-                    ? 11
-                    : per_avg_val >= 0 &&
-                      per_avg_val <= 20 &&
-                      avg >= 60 &&
-                      avg <= 80
-                    ? 13
-                    : per_avg_val >= 20 &&
-                      per_avg_val <= 40 &&
-                      avg >= 60 &&
-                      avg <= 80
-                    ? 14
-                    : per_avg_val >= 40 &&
-                      per_avg_val <= 60 &&
-                      avg >= 60 &&
-                      avg <= 80
-                    ? 15
-                    : per_avg_val >= 60 &&
-                      per_avg_val <= 80 &&
-                      avg >= 60 &&
-                      avg <= 80
-                    ? 16
-                    : 0;
-
-                if (
-                  per_avg_val >= 40 &&
-                  per_avg_val <= 60 &&
-                  avg >= 0 &&
-                  avg <= 20
-                ) {
-                  const isPointInside: boolean = isInsideTriangle(
-                    0,
-                    40,
-                    20,
-                    40,
-                    0,
-                    60,
-                    avg,
-                    per_avg_val
-                  );
-                  if (isPointInside) {
-                    stateValue = 3;
-                  } else {
-                    stateValue = 7;
-                  }
-                }
-
-                if (
-                  per_avg_val >= 60 &&
-                  per_avg_val <= 80 &&
-                  avg >= 20 &&
-                  avg <= 40
-                ) {
-                  const isPointInside: boolean = isInsideTriangle(
-                    20,
-                    60,
-                    40,
-                    60,
-                    20,
-                    80,
-                    avg,
-                    per_avg_val
-                  );
-                  if (isPointInside) {
-                    stateValue = 8;
-                  } else {
-                    stateValue = 12;
-                  }
-                }
-
-                if (
-                  per_avg_val >= 60 &&
-                  per_avg_val <= 80 &&
-                  avg >= 40 &&
-                  avg <= 60
-                ) {
-                  const isPointInside: boolean = isInsideTriangle(
-                    40,
-                    60,
-                    60,
-                    60,
-                    40,
-                    80,
-                    avg,
-                    per_avg_val
-                  );
-                  if (isPointInside) {
-                    stateValue = 12;
-                  } else {
-                    stateValue = 16;
-                  }
-                }
-                this.alarm_metrics_barchart.push({
-                  area: dataPoint.area,
-                  areacolor: dataPoint.color,
-                  date: dataPoint.convert_to_intervaltime,
-                  avg: dataPoint.avg,
-                  [dataPoint.area]: stateValue,
-                  percent_outside_target_avg_value:
-                    dataPoint.percent_outside_target_avg_value || 0,
-                });
-              }
+          function isInsideTriangle(
+            x1: number,
+            y1: number,
+            x2: number,
+            y2: number,
+            x3: number,
+            y3: number,
+            x: number,
+            y: number
+          ): boolean {
+            function area(
+              x1: number,
+              y1: number,
+              x2: number,
+              y2: number,
+              x3: number,
+              y3: number
+            ): number {
+              return Math.abs(
+                (x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2.0
+              );
             }
-          );
-          this.statePoints.forEach(
-            (dataPoint: {
-              avg: any;
-              percent_outside_target_avg_value: any;
-              area: any;
-              color: any;
-              convert_to_intervaltime: any;
-            }) => {
-              if (dataPoint) {
-                this.alarm_metrics1.push({
-                  area: dataPoint.area,
-                  areacolor: dataPoint.color,
-                  datetime: dataPoint.convert_to_intervaltime,
-                  // state_avg: this.mapValueSteadyStateArgAxis(dataPoint.avg) || 0,
-                  state_percent_outside_target_avg_value:
-                    dataPoint.percent_outside_target_avg_value > 80
-                      ? 80
-                      : dataPoint.percent_outside_target_avg_value,
-                  state_avg: dataPoint.avg > 80 ? 80 : dataPoint.avg,
-                  // state_percent_outside_target_avg_value: dataPoint.percent_outside_target_avg_value
-                });
-              }
-            }
-          );
 
-          this.dataPoints.forEach(
-            (dataPoint: {
-              max: any;
-              percent_outside_target: any;
-              area: any;
-              color: any;
-              convert_to_intervaltime: any;
-            }) => {
-              this.alarm_metrics2.push({
-                area: dataPoint.area,
-                areacolor: dataPoint.color,
-                datetime: dataPoint.convert_to_intervaltime,
-                max: dataPoint.max > 40 ? 40 : dataPoint.max,
-                percent_outside_target:
-                  dataPoint.percent_outside_target > 80
-                    ? 80
-                    : dataPoint.percent_outside_target,
-              });
+            /* Calculate the area of triangle ABC */
+            const A: number = area(x1, y1, x2, y2, x3, y3);
 
-              let avg = dataPoint.max > 40 ? 40 : dataPoint.max;
-              let per_avg_val =
-                dataPoint.percent_outside_target > 80
-                  ? 80
-                  : dataPoint.percent_outside_target;
+            /* Calculate the area of triangle PBC */
+            const A1: number = area(x, y, x2, y2, x3, y3);
 
-              function isInsideTriangle(
-                x1: number,
-                y1: number,
-                x2: number,
-                y2: number,
-                x3: number,
-                y3: number,
-                x: number,
-                y: number
-              ): boolean {
-                function area(
-                  x1: number,
-                  y1: number,
-                  x2: number,
-                  y2: number,
-                  x3: number,
-                  y3: number
-                ): number {
-                  return Math.abs(
-                    (x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2.0
-                  );
-                }
+            /* Calculate the area of triangle PAC */
+            const A2: number = area(x1, y1, x, y, x3, y3);
 
-                /* Calculate the area of triangle ABC */
-                const A: number = area(x1, y1, x2, y2, x3, y3);
+            /* Calculate the area of triangle PAB */
+            const A3: number = area(x1, y1, x2, y2, x, y);
 
-                /* Calculate the area of triangle PBC */
-                const A1: number = area(x, y, x2, y2, x3, y3);
-
-                /* Calculate the area of triangle PAC */
-                const A2: number = area(x1, y1, x, y, x3, y3);
-
-                /* Calculate the area of triangle PAB */
-                const A3: number = area(x1, y1, x2, y2, x, y);
-
-                /* Check if the sum of A1, A2, and A3 is the same as A */
-                return A === A1 + A2 + A3;
-              }
-
-              let stateValue =
-                per_avg_val >= 0 && per_avg_val <= 20 && avg >= 0 && avg <= 10
-                  ? 1
-                  : per_avg_val >= 20 &&
-                    per_avg_val <= 40 &&
-                    avg >= 0 &&
-                    avg <= 10
-                  ? 2
-                  : per_avg_val >= 60 &&
-                    per_avg_val <= 80 &&
-                    avg >= 0 &&
-                    avg <= 10
-                  ? 7
-                  : per_avg_val >= 0 &&
-                    per_avg_val <= 20 &&
-                    avg >= 10 &&
-                    avg <= 20
-                  ? 4
-                  : per_avg_val >= 20 &&
-                    per_avg_val <= 40 &&
-                    avg >= 10 &&
-                    avg <= 20
-                  ? 5
-                  : per_avg_val >= 40 &&
-                    per_avg_val <= 60 &&
-                    avg >= 10 &&
-                    avg <= 20
-                  ? 6
-                  : per_avg_val >= 0 &&
-                    per_avg_val <= 20 &&
-                    avg >= 20 &&
-                    avg <= 30
-                  ? 8
-                  : per_avg_val >= 20 &&
-                    per_avg_val <= 40 &&
-                    avg >= 20 &&
-                    avg <= 30
-                  ? 8
-                  : per_avg_val >= 40 &&
-                    per_avg_val <= 60 &&
-                    avg >= 20 &&
-                    avg <= 30
-                  ? 10
-                  : per_avg_val >= 0 &&
-                    per_avg_val <= 20 &&
-                    avg >= 30 &&
-                    avg <= 40
-                  ? 12
-                  : per_avg_val >= 20 &&
-                    per_avg_val <= 40 &&
-                    avg >= 30 &&
-                    avg <= 40
-                  ? 13
-                  : per_avg_val >= 40 &&
-                    per_avg_val <= 60 &&
-                    avg >= 30 &&
-                    avg <= 40
-                  ? 14
-                  : per_avg_val >= 60 &&
-                    per_avg_val <= 80 &&
-                    avg >= 30 &&
-                    avg <= 40
-                  ? 15
-                  : 0;
-
-              if (
-                per_avg_val >= 40 &&
-                per_avg_val <= 60 &&
+            /* Check if the sum of A1, A2, and A3 is the same as A */
+            return A === A1 + A2 + A3;
+          }
+          let stateValue =
+            per_avg_val >= 0 && per_avg_val <= 20 && avg >= 0 && avg <= 20
+              ? 1
+              : per_avg_val >= 20 &&
+                per_avg_val <= 40 &&
                 avg >= 0 &&
-                avg <= 10
-              ) {
-                const isPointInside: boolean = isInsideTriangle(
-                  0,
-                  40,
-                  10,
-                  40,
-                  0,
-                  60,
-                  avg,
-                  per_avg_val
-                );
-                if (isPointInside) {
-                  stateValue = 3;
-                } else {
-                  stateValue = 4;
-                }
-              }
-
-              if (
-                per_avg_val >= 60 &&
-                per_avg_val <= 80 &&
-                avg >= 10 &&
                 avg <= 20
-              ) {
-                const isPointInside: boolean = isInsideTriangle(
-                  10,
-                  60,
-                  20,
-                  60,
-                  10,
-                  80,
-                  avg,
-                  per_avg_val
-                );
-                if (isPointInside) {
-                  stateValue = 8;
-                } else {
-                  stateValue = 9;
-                }
-              }
-
-              if (
-                per_avg_val >= 60 &&
+              ? 2
+              : per_avg_val >= 60 &&
                 per_avg_val <= 80 &&
+                avg >= 0 &&
+                avg <= 20
+              ? 4
+              : per_avg_val >= 0 &&
+                per_avg_val <= 20 &&
                 avg >= 20 &&
-                avg <= 30
-              ) {
-                const isPointInside: boolean = isInsideTriangle(
-                  20,
-                  60,
-                  30,
-                  60,
-                  20,
-                  80,
-                  avg,
-                  per_avg_val
-                );
-                if (isPointInside) {
-                  stateValue = 12;
-                } else {
-                  stateValue = 16;
-                }
-              }
-              this.alarm_metrics_barchart_upset_state.push({
-                area: dataPoint.area,
-                areacolor: dataPoint.color,
-                date: dataPoint.convert_to_intervaltime,
-                avg: dataPoint.max,
-                [dataPoint.area]: stateValue,
-                percent_outside_target_avg_value:
-                  dataPoint.percent_outside_target || 0,
-              });
+                avg <= 40
+              ? 5
+              : per_avg_val >= 20 &&
+                per_avg_val <= 40 &&
+                avg >= 20 &&
+                avg <= 40
+              ? 6
+              : per_avg_val >= 40 &&
+                per_avg_val <= 60 &&
+                avg >= 20 &&
+                avg <= 40
+              ? 7
+              : per_avg_val >= 0 &&
+                per_avg_val <= 20 &&
+                avg >= 40 &&
+                avg <= 60
+              ? 9
+              : per_avg_val >= 20 &&
+                per_avg_val <= 40 &&
+                avg >= 40 &&
+                avg <= 60
+              ? 10
+              : per_avg_val >= 40 &&
+                per_avg_val <= 60 &&
+                avg >= 40 &&
+                avg <= 60
+              ? 11
+              : per_avg_val >= 0 &&
+                per_avg_val <= 20 &&
+                avg >= 60 &&
+                avg <= 80
+              ? 13
+              : per_avg_val >= 20 &&
+                per_avg_val <= 40 &&
+                avg >= 60 &&
+                avg <= 80
+              ? 14
+              : per_avg_val >= 40 &&
+                per_avg_val <= 60 &&
+                avg >= 60 &&
+                avg <= 80
+              ? 15
+              : per_avg_val >= 60 &&
+                per_avg_val <= 80 &&
+                avg >= 60 &&
+                avg <= 80
+              ? 16
+              : 0;
+
+          if (
+            per_avg_val >= 40 &&
+            per_avg_val <= 60 &&
+            avg >= 0 &&
+            avg <= 20
+          ) {
+            const isPointInside: boolean = isInsideTriangle(
+              0,
+              40,
+              20,
+              40,
+              0,
+              60,
+              avg,
+              per_avg_val
+            );
+            if (isPointInside) {
+              stateValue = 3;
+            } else {
+              stateValue = 7;
             }
-          );
-          this.statePoints.forEach(
-            (dataPoint: {
-              max: any;
-              percent_outside_target: any;
-              area: any;
-              color: any;
-            }) => {
-              if (dataPoint) {
-                this.alarm_metrics2.push({
-                  area: dataPoint.area,
-                  areacolor: dataPoint.color,
-                  state_max: dataPoint.max > 40 ? 40 : dataPoint.max,
-                  state_percent_outside_target:
-                    dataPoint.percent_outside_target > 80
-                      ? 80
-                      : dataPoint.percent_outside_target,
-                });
-              }
+          }
+
+          if (
+            per_avg_val >= 60 &&
+            per_avg_val <= 80 &&
+            avg >= 20 &&
+            avg <= 40
+          ) {
+            const isPointInside: boolean = isInsideTriangle(
+              20,
+              60,
+              40,
+              60,
+              20,
+              80,
+              avg,
+              per_avg_val
+            );
+            if (isPointInside) {
+              stateValue = 8;
+            } else {
+              stateValue = 12;
             }
+          }
+
+          if (
+            per_avg_val >= 60 &&
+            per_avg_val <= 80 &&
+            avg >= 40 &&
+            avg <= 60
+          ) {
+            const isPointInside: boolean = isInsideTriangle(
+              40,
+              60,
+              60,
+              60,
+              40,
+              80,
+              avg,
+              per_avg_val
+            );
+            if (isPointInside) {
+              stateValue = 12;
+            } else {
+              stateValue = 16;
+            }
+          }
+          this.alarm_metrics_barchart.push({
+            area: dataPoint.area,
+            areacolor: dataPoint.color,
+            date: dataPoint.convert_to_intervaltime,
+            avg: dataPoint.avg,
+            [dataPoint.area]: stateValue,
+            percent_outside_target_avg_value:
+              dataPoint.percent_outside_target_avg_value || 0,
+          });
+        }
+      }
+    );
+    this.statePoints.forEach(
+      (dataPoint: {
+        avg: any;
+        percent_outside_target_avg_value: any;
+        area: any;
+        color: any;
+        convert_to_intervaltime: any;
+      }) => {
+        if (dataPoint) {
+          this.alarm_metrics1.push({
+            area: dataPoint.area,
+            areacolor: dataPoint.color,
+            datetime: dataPoint.convert_to_intervaltime,
+            // state_avg: this.mapValueSteadyStateArgAxis(dataPoint.avg) || 0,
+            state_percent_outside_target_avg_value:
+              dataPoint.percent_outside_target_avg_value > 80
+                ? 80
+                : dataPoint.percent_outside_target_avg_value,
+            state_avg: dataPoint.avg > 80 ? 80 : dataPoint.avg,
+            // state_percent_outside_target_avg_value: dataPoint.percent_outside_target_avg_value
+          });
+        }
+      }
+    );
+
+    this.dataPoints.forEach(
+      (dataPoint: {
+        max: any;
+        percent_outside_target: any;
+        area: any;
+        color: any;
+        convert_to_intervaltime: any;
+      }) => {
+        this.alarm_metrics2.push({
+          area: dataPoint.area,
+          areacolor: dataPoint.color,
+          datetime: dataPoint.convert_to_intervaltime,
+          max: dataPoint.max > 40 ? 40 : dataPoint.max,
+          percent_outside_target:
+            dataPoint.percent_outside_target > 80
+              ? 80
+              : dataPoint.percent_outside_target,
+        });
+
+        let avg = dataPoint.max > 40 ? 40 : dataPoint.max;
+        let per_avg_val =
+          dataPoint.percent_outside_target > 80
+            ? 80
+            : dataPoint.percent_outside_target;
+
+        function isInsideTriangle(
+          x1: number,
+          y1: number,
+          x2: number,
+          y2: number,
+          x3: number,
+          y3: number,
+          x: number,
+          y: number
+        ): boolean {
+          function area(
+            x1: number,
+            y1: number,
+            x2: number,
+            y2: number,
+            x3: number,
+            y3: number
+          ): number {
+            return Math.abs(
+              (x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2.0
+            );
+          }
+
+          /* Calculate the area of triangle ABC */
+          const A: number = area(x1, y1, x2, y2, x3, y3);
+
+          /* Calculate the area of triangle PBC */
+          const A1: number = area(x, y, x2, y2, x3, y3);
+
+          /* Calculate the area of triangle PAC */
+          const A2: number = area(x1, y1, x, y, x3, y3);
+
+          /* Calculate the area of triangle PAB */
+          const A3: number = area(x1, y1, x2, y2, x, y);
+
+          /* Check if the sum of A1, A2, and A3 is the same as A */
+          return A === A1 + A2 + A3;
+        }
+
+        let stateValue =
+          per_avg_val >= 0 && per_avg_val <= 20 && avg >= 0 && avg <= 10
+            ? 1
+            : per_avg_val >= 20 &&
+              per_avg_val <= 40 &&
+              avg >= 0 &&
+              avg <= 10
+            ? 2
+            : per_avg_val >= 60 &&
+              per_avg_val <= 80 &&
+              avg >= 0 &&
+              avg <= 10
+            ? 7
+            : per_avg_val >= 0 &&
+              per_avg_val <= 20 &&
+              avg >= 10 &&
+              avg <= 20
+            ? 4
+            : per_avg_val >= 20 &&
+              per_avg_val <= 40 &&
+              avg >= 10 &&
+              avg <= 20
+            ? 5
+            : per_avg_val >= 40 &&
+              per_avg_val <= 60 &&
+              avg >= 10 &&
+              avg <= 20
+            ? 6
+            : per_avg_val >= 0 &&
+              per_avg_val <= 20 &&
+              avg >= 20 &&
+              avg <= 30
+            ? 8
+            : per_avg_val >= 20 &&
+              per_avg_val <= 40 &&
+              avg >= 20 &&
+              avg <= 30
+            ? 8
+            : per_avg_val >= 40 &&
+              per_avg_val <= 60 &&
+              avg >= 20 &&
+              avg <= 30
+            ? 10
+            : per_avg_val >= 0 &&
+              per_avg_val <= 20 &&
+              avg >= 30 &&
+              avg <= 40
+            ? 12
+            : per_avg_val >= 20 &&
+              per_avg_val <= 40 &&
+              avg >= 30 &&
+              avg <= 40
+            ? 13
+            : per_avg_val >= 40 &&
+              per_avg_val <= 60 &&
+              avg >= 30 &&
+              avg <= 40
+            ? 14
+            : per_avg_val >= 60 &&
+              per_avg_val <= 80 &&
+              avg >= 30 &&
+              avg <= 40
+            ? 15
+            : 0;
+
+        if (
+          per_avg_val >= 40 &&
+          per_avg_val <= 60 &&
+          avg >= 0 &&
+          avg <= 10
+        ) {
+          const isPointInside: boolean = isInsideTriangle(
+            0,
+            40,
+            10,
+            40,
+            0,
+            60,
+            avg,
+            per_avg_val
           );
+          if (isPointInside) {
+            stateValue = 3;
+          } else {
+            stateValue = 4;
+          }
+        }
+
+        if (
+          per_avg_val >= 60 &&
+          per_avg_val <= 80 &&
+          avg >= 10 &&
+          avg <= 20
+        ) {
+          const isPointInside: boolean = isInsideTriangle(
+            10,
+            60,
+            20,
+            60,
+            10,
+            80,
+            avg,
+            per_avg_val
+          );
+          if (isPointInside) {
+            stateValue = 8;
+          } else {
+            stateValue = 9;
+          }
+        }
+
+        if (
+          per_avg_val >= 60 &&
+          per_avg_val <= 80 &&
+          avg >= 20 &&
+          avg <= 30
+        ) {
+          const isPointInside: boolean = isInsideTriangle(
+            20,
+            60,
+            30,
+            60,
+            20,
+            80,
+            avg,
+            per_avg_val
+          );
+          if (isPointInside) {
+            stateValue = 12;
+          } else {
+            stateValue = 16;
+          }
+        }
+        this.alarm_metrics_barchart_upset_state.push({
+          area: dataPoint.area,
+          areacolor: dataPoint.color,
+          date: dataPoint.convert_to_intervaltime,
+          avg: dataPoint.max,
+          [dataPoint.area]: stateValue,
+          percent_outside_target_avg_value:
+            dataPoint.percent_outside_target || 0,
+        });
+      }
+    );
+    this.statePoints.forEach(
+      (dataPoint: {
+        max: any;
+        percent_outside_target: any;
+        area: any;
+        color: any;
+      }) => {
+        if (dataPoint) {
+          this.alarm_metrics2.push({
+            area: dataPoint.area,
+            areacolor: dataPoint.color,
+            state_max: dataPoint.max > 40 ? 40 : dataPoint.max,
+            state_percent_outside_target:
+              dataPoint.percent_outside_target > 80
+                ? 80
+                : dataPoint.percent_outside_target,
+          });
+        }
+      }
+    );
   }
 
   productionData: any[] = [];
@@ -1692,22 +1742,198 @@ export class AnalyticViewerComponent implements OnInit {
       }
     );
   } 
-  
-  onAddClicked(): void {
-    this.router.navigate(['analytic-control']);
+
+  AlarmVsOperatorData: any = [];
+  AlarmVsOperatorTableData: any = [];
+
+  AlarmsVsOperatorAction(data: any) {
+    this.AlarmVsOperatorData = data.charts;
+    this.AlarmVsOperatorTableData = data.Table;
   }
 
-  onSaveClicked(): void {
-    console.log('Save button clicked');
+  StandingACKData: any = [];
+  StandingACKTableData: any = [];
+  StandingACK(data: any) {
+    this.StandingACKData = data.charts;
+    this.StandingACKTableData = data.Table;
   }
 
-  onSettingsClicked(): void {
-    if (this.dataFromStorage) {
-      this.router.navigate(['analytic-control']);
+  isSavePopupVisible = false;
+
+  accessType = [
+    { name: 'Normal', value: 'N' },
+    { name: 'Exclusive', value: 'E' },
+    { name: 'Common', value: 'C' },
+  ];
+
+  mapTypes = ['Enterprise', 'Site', 'Plant', 'Area', 'Unit'];
+
+  popupData: any = {
+    accessType: 'N',
+    refreshRate: 10,
+    dashboardName: '',
+    mapType: 'Enterprise',
+    enterpriseId: null,
+    siteId: null,
+    plantId: null,
+    areaId: null,
+    unitId: null,
+  };
+
+  enterprises = [];
+  sites = [];
+  plants = [];
+  areas = [];
+  units = [];
+
+  openSavePopup() {
+    this.isSavePopupVisible = true;
+
+    this.apiService.GetUserEnterprises().subscribe({
+      next: (res: any) => {
+        this.enterprises = JSON.parse(res)
+      },
+      error: (err) => console.error('SaveAEPage error', err)
+    });
+  }
+
+  onMapTypeChanged(e: any) {
+    this.popupData.mapType = e.value;
+    this.popupData.siteId = null;
+    this.popupData.plantId = null;
+    this.popupData.areaId = null;
+    this.popupData.unitId = null;
+  }
+
+  onEnterpriseChanged(e: any) {
+    this.popupData.enterpriseId = e.value;
+
+    this.apiService.GetSitesByEnterpriseId(e.value).subscribe({
+      next: (res: any) => {
+        this.sites = JSON.parse(res);
+      },
+      error: (err) => console.error('SaveAEPage error', err)
+    });
+
+    this.plants = [];
+    this.areas = [];
+    this.units = [];
+  }
+
+  onSiteChanged(e: any) {
+    this.popupData.siteId = e.value;
+
+    this.apiService.GetPlantsBySiteId(e.value).subscribe({
+      next: (res: any) => {
+        this.plants = JSON.parse(res);
+      },
+      error: (err) => console.error('SaveAEPage error', err)
+    });
+    this.areas = [];
+    this.units = [];
+  }
+
+  onPlantChanged(e: any) {
+    this.popupData.plantId = e.value;
+    this.apiService.GetAreasByPlantId(e.value).subscribe({
+      next: (res: any) => {
+        this.areas = JSON.parse(res);
+      },
+      error: (err) => console.error('SaveAEPage error', err)
+    });
+    this.units = [];
+  }
+
+  onAreaChanged(e: any) {
+    this.popupData.areaId = e.value;
+    this.apiService.GetUnitsByAreaId(e.value).subscribe({
+      next: (res: any) => {
+        this.units = JSON.parse(res);
+      },
+      error: (err) => console.error('SaveAEPage error', err)
+    });
+  }
+
+  confirmSave() {
+    this.isSavePopupVisible = false;
+
+    this.saveAnalyticPage();
+  }
+
+  saveAnalyticPage() {
+    var user: any = localStorage.getItem("user_details");
+    user = JSON.parse(user);
+    const { enterpriseId, siteId, plantId, areaId, unitId } = this.popupData;
+
+    const localData = localStorage.getItem("AT_Properties");
+
+    const pagePayload: any = {
+      PageName: this.popupData.dashboardName,
+      RefreshRate: this.popupData.refreshRate,
+      PageAccessType: "N",
+      MapType: "E", 
+      PageType: "A",
+      PageProperties: JSON.stringify(localData),
+      UserId: user.UserId,
+      EnterpriseId: enterpriseId ?? null,
+      SiteId: siteId ?? null,
+      PlantId: plantId ?? null,
+      AreaId: areaId ?? null,
+      UnitId: unitId ?? null,
+    };
+
+    if (unitId) {
+      pagePayload.MappingId = unitId;
+      pagePayload.MapType = "U";
+    } else if (areaId) {
+      pagePayload.MappingId = areaId;
+      pagePayload.MapType = "A";
+    } else if (plantId) {
+      pagePayload.MappingId = plantId;
+      pagePayload.MapType = "P";
+    } else if (siteId) {
+      pagePayload.MappingId = siteId;
+      pagePayload.MapType = "S";
+    } else if (enterpriseId) {
+      pagePayload.MappingId = enterpriseId;
+      pagePayload.MapType = "E";
+    } else {
+      pagePayload.MappingId = null;
     }
+
+    console.log(pagePayload);
+
+    this.apiService.SaveAEPage(pagePayload).subscribe({
+      next: () => {
+          localStorage.removeItem("AT_Properties");
+          location.reload();
+      },
+      error: (err) => console.error('SaveAEPage error', err)
+    });  
   }
 
-  onDeleteClicked(): void {
-    console.log('Delete button clicked');
+  updatePage() {
+    if (!this.savedPageId) {
+      console.error("No page ID found for update");
+      return;
+    }
+
+    const localStorageData = localStorage.getItem('AT_Properties');
+    const user: any = JSON.parse(localStorage.getItem('user_details') || '{}');
+
+    const pagePayload = {
+      PageId: this.pageValues.pageid,
+      PageName: this.pageValues.pagename,
+      RefreshRate: this.pageValues.RefreshRate,
+      PageProperties: localStorageData,
+      UserId: user.UserId
+    };
+
+    this.apiService.UpdateAEPage(pagePayload).subscribe({
+      next: (res) => {
+        alert('Page updated successfully!');
+      },
+      error: (err) => console.error('UpdateAEPage error', err)
+    });
   }
 }

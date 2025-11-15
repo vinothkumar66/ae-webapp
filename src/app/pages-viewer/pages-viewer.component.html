@@ -42,33 +42,12 @@
       >
         <dxi-column cellTemplate="quickAccessDashboardTemplate"></dxi-column>
         <dxi-column dataField="pageid" caption="Page ID" [visible]="false"></dxi-column>
-        <dxi-column
-          dataField="pagename"
-          caption="Dashboard Name"
-          cellTemplate="dashboardNameTemplate"
-        ></dxi-column>
+        <dxi-column dataField="pagename" caption="Dashboard Name"></dxi-column>
         <dxi-column dataField="pagetype" caption="Page Type"></dxi-column>
         <dxi-column dataField="pageaccesstype" caption="Access Type"></dxi-column>
         <dxi-column dataField="username" caption="Last Updated By"></dxi-column>
         <dxi-column dataField="mod_time" caption="Last Updated Date"></dxi-column>
         <dxi-column cellTemplate="defaultDashboardTemplate"></dxi-column>
-
-        <!-- Dashboard name clickable -->
-        <div *dxTemplate="let cell of 'dashboardNameTemplate'">
-          <dx-button
-            [text]="cell.text"
-            stylingMode="text"
-            type="default"
-            (onClick)="navigateToDashboard(cell.data, 'self')"
-          ></dx-button>
-          <dx-button
-            icon="panelleft"
-            stylingMode="text"
-            type="default"
-            hint="Open in new tab"
-            (onClick)="navigateToDashboard(cell.data, 'blank')"
-          ></dx-button>
-        </div>
 
         <!-- Quick access for dashboard -->
         <div *dxTemplate="let cell of 'quickAccessDashboardTemplate'">
@@ -128,7 +107,7 @@
         (onRowRemoving)="onDeleteRow($event)"
       >
         <dxi-column dataField="pageid" caption="Page ID" [visible]="false"></dxi-column>
-        <dxi-column dataField="pagename" caption="Page Name"></dxi-column>
+        <dxi-column dataField="pagename" caption="Control Name"></dxi-column>
         <dxi-column dataField="pagetype" caption="Page Type"></dxi-column>
         <dxi-column dataField="pageaccesstype" caption="Access Type"></dxi-column>
         <dxi-column dataField="username" caption="Last Updated By"></dxi-column>

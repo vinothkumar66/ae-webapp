@@ -21,33 +21,20 @@
 
 .dashboard-toolbar {
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+  justify-content: space-between;
   background-color: var(--dx-color-bg);
-  padding: 10px;
-  border-bottom: 1px solid var(--dx-color-border);
+  padding: 8px;
   position: sticky;
   top: 0;
   z-index: 100;
 }
 
-.dashboard-toolbar button {
-  background-color: var(--dx-color-bg);
-  color: var(--dx-color-text);
-  border: none;
-  padding: 8px 14px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background 0.2s ease;
-}
-
-.dashboard-toolbar button:hover {
-  background-color: var(--dx-color-bg-hover, var(--dx-color-bg));
+.dashboard-toolbar .header-icons {
+  display: flex;
+  gap: 10px;
 }
 
 .row-widget {
-  /* border: 2px dotted var(--dx-color-border); */
   background: var(--dx-color-bg);
   box-sizing: border-box;
   display: flex;
@@ -391,7 +378,7 @@ dx-data-grid {
 
 .popup-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 10px;
   margin-top: 15px;
 }
@@ -443,4 +430,11 @@ dx-data-grid {
   color: #888;
   font-size: 16px;
   font-style: italic;
+}
+
+.datefilter_buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
 }
